@@ -29,6 +29,9 @@ const Navbar = () => {
                 <Link to="/historico" className="relative z-10 text-white hover:text-gray-300 transition duration-300">
                     Histórico
                 </Link>
+                <Link to="/projetos" className="relative z-10 text-white hover:text-gray-300 transition duration-300">
+                    Projetos
+                </Link>
             </div>
             <Link to="/perfil" className="relative z-10 flex items-center gap-2 text-white hover:text-gray-300 transition duration-300">
                 <i className="fa-solid fa-user w-4 text-center"></i> Perfil
