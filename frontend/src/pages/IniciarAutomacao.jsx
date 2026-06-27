@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useContext } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { TesterContext } from '../context/TesterContext'
 import { api, subscribeToExecution } from '../services/api'
 
@@ -13,20 +15,30 @@ const testTypes = [
   { id: 'js',    label: 'Erros de JavaScript',         desc: 'Console errors e exceções' },
 ]
 
+const issueColor = { critical: '#f87171', warning: '#fbbf24', info: '#22d3ee' }
+
+function ScoreBig({ score }) {
+  const color  = score >= 85 ? 'var(--success)'  : score >= 70 ? 'var(--warning)'  : 'var(--danger)'
+  const border = score >= 85 ? 'rgba(52,211,153,0.3)' : score >= 70 ? 'rgba(251,191,36,0.3)' : 'rgba(248,113,113,0.3)'
+  const bg     = score >= 85 ? 'rgba(52,211,153,0.1)'  : score >= 70 ? 'rgba(251,191,36,0.1)'  : 'rgba(248,113,113,0.1)'
+  return (
+    <div style={{ width: 96, height: 96, borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `3px solid ${border}`, background: bg }}>
+      <span style={{ fontSize: 36, fontWeight: 900, color }}>{score}</span>
+    </div>
+  )
+}
+
 function StepBar({ step }) {
   const labels = ['Configuração', 'Executando', 'Relatório']
   return (
-    <div className="flex items-center gap-2 mb-8">
+    <div className="step-bar">
       {labels.map((label, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-300
-            ${step === i+1 ? 'bg-primary text-white shadow-[0_0_12px_rgba(124,58,237,0.5)]'
-            : step > i+1 ? 'bg-success/20 text-success border border-success/40'
-            : 'bg-white/8 text-faint'}`}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={`step-dot${step === i+1 ? ' active' : step > i+1 ? ' done' : ''}`}>
             {step > i+1 ? '✓' : i+1}
           </div>
-          <span className={`text-[13px] font-semibold ${step === i+1 ? 'text-bright' : 'text-faint'}`}>{label}</span>
-          {i < labels.length - 1 && <div className={`h-px w-8 mx-1 ${step > i+1 ? 'bg-success/40' : 'bg-white/8'}`}/>}
+          <span className={`step-lbl${step === i+1 ? ' active' : step > i+1 ? ' done' : ''}`}>{label}</span>
+          {i < labels.length - 1 && <div className={`step-line${step > i+1 ? ' done' : ''}`}/>}
         </div>
       ))}
     </div>
@@ -35,26 +47,52 @@ function StepBar({ step }) {
 
 export default function IniciarAutomacao() {
   const { addReport, loadReports, backendOnline } = useContext(TesterContext)
-  const [step, setStep] = useState(1)
-  const [url, setUrl] = useState('')
-  const [testName, setTestName] = useState('')
-  const [selected, setSelected] = useState(['nav', 'a11y', 'seo', 'sec'])
-  const [recordVideo, setRecordVideo] = useState(false)
+  const location = useLocation()
+  const prefill  = location.state || {}
 
-  const [executionId, setExecutionId] = useState(null)
-  const [logs, setLogs] = useState([])
-  const [progress, setProgress] = useState(0)
-  const [totalSteps] = useState(14)
-  const [doneSteps, setDoneSteps] = useState(0)
-  const [result, setResult] = useState(null)
-  const logRef = useRef(null)
+  const [step, setStep]               = useState(prefill.resumeExecId ? 2 : 1)
+  const [url, setUrl]                 = useState(prefill.url || '')
+  const [testName, setTestName]       = useState(prefill.testName || '')
+  const [selected, setSelected]       = useState(prefill.checks || ['nav', 'a11y', 'seo', 'sec'])
+  const [recordVideo, setRecordVideo] = useState(false)
+  const [showCreds, setShowCreds]     = useState(false)
+  const [creds, setCreds]             = useState({ email: '', username: '', password: '' })
+  const [executionId, setExecutionId] = useState(prefill.resumeExecId || null)
+  const [logs, setLogs]               = useState([])
+  const [progress, setProgress]       = useState(0)
+  const [totalSteps]                  = useState(14)
+  const [doneSteps, setDoneSteps]     = useState(0)
+  const [result, setResult]           = useState(null)
+  const logRef   = useRef(null)
   const unsubRef = useRef(null)
 
+  // If resuming a running execution, connect immediately
   useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
-  }, [logs])
+    if (prefill.resumeExecId) {
+      addLog('🔗', `Reconectando à execução #${prefill.resumeExecId.slice(0, 8)}...`)
+      const unsub = subscribeToExecution(prefill.resumeExecId, {
+        onAny: (data) => {
+          if (data.type === 'step_start') addLog('▶', data.name)
+          else if (data.type === 'step_pass') {
+            addLog('✅', data.name, 'success')
+            setDoneSteps(d => d + 1)
+            setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
+          } else if (data.type === 'step_fail') {
+            addLog('❌', `${data.name}: ${data.error || 'Falhou'}`, 'error')
+            setDoneSteps(d => d + 1)
+            setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
+          } else if (data.type === 'finished') {
+            setProgress(100)
+            handleFinished(prefill.resumeExecId, data)
+          }
+        }
+      })
+      unsubRef.current = unsub
+    }
+    return () => { if (unsubRef.current) unsubRef.current() }
+  }, [])
 
-  useEffect(() => () => { if (unsubRef.current) unsubRef.current() }, [])
+  useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [logs])
 
   const toggle = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
@@ -65,16 +103,28 @@ export default function IniciarAutomacao() {
 
   const startAudit = async () => {
     if (!url) return
+    if (!backendOnline) { toast.error('Backend offline — inicie o servidor para executar auditorias.'); return }
     setStep(2); setLogs([]); setProgress(0); setDoneSteps(0); setResult(null)
     addLog('🚀', 'Iniciando execução QA...')
 
-    if (!backendOnline) { runMockExecution(); return }
+    if (prefill.projectId) {
+      localStorage.setItem(`qatry_lastrun_${prefill.projectId}`, JSON.stringify({ url, testName, checks: selected }))
+    }
+
+    const credentialsPayload = showCreds && (creds.email || creds.username) && creds.password
+      ? { email: creds.email || undefined, username: creds.username || undefined, password: creds.password }
+      : null
 
     try {
-      const exec = await api.startExecution({ base_url: url, trigger_type: 'manual', record_video: recordVideo })
+      const exec = await api.startExecution({
+        base_url: url,
+        trigger_type: 'manual',
+        record_video: recordVideo,
+        flow_name: testName || undefined,
+        credentials: credentialsPayload,
+      })
       setExecutionId(exec.id)
       addLog('🔗', `Execução #${exec.id.slice(0, 8)} criada`)
-
       const unsub = subscribeToExecution(exec.id, {
         onAny: (data) => {
           if (data.type === 'step_start') addLog('▶', data.name)
@@ -94,40 +144,39 @@ export default function IniciarAutomacao() {
       })
       unsubRef.current = unsub
     } catch (err) {
-      addLog('⚠️', `Backend offline: ${err.message}`, 'error')
-      runMockExecution()
+      addLog('❌', `Erro ao iniciar: ${err.message}`, 'error')
+      toast.error(err.message)
+      setStep(1)
     }
   }
 
   const handleFinished = async (execId, data) => {
     if (unsubRef.current) { unsubRef.current(); unsubRef.current = null }
-    if (data.status === 'stopped') { addLog('⏹', 'Parado', 'warning'); setStep(1); return }
+    if (data.status === 'stopped') { addLog('⏹', 'Parado pelo usuário', 'warning'); setStep(1); return }
     addLog('📊', 'Buscando resultado...')
     try {
       const exec = await api.getExecution(execId)
       const r = {
-        score: exec.score,
-        findings: exec.findings || [],
-        suggestions: exec.suggestions || [],
+        score: exec.score, findings: exec.findings || [], suggestions: exec.suggestions || [],
         passed: exec.passed_steps, failed: exec.failed_steps, total: exec.total_steps,
         duration: exec.duration_ms ? `${(exec.duration_ms / 1000).toFixed(0)}s` : null,
-        htmlUrl: api.reportHtmlUrl(execId),
         pdfUrl: api.reportPdfUrl(execId),
       }
       setResult(r)
       addLog('✅', 'Relatório pronto!', 'success')
+      const resolvedTitle = testName || exec.flow_name || `Auditoria — ${url}`
       addReport({
-        id: execId, title: testName || `Auditoria — ${url}`, url,
+        id: execId, title: resolvedTitle, url: url || exec.base_url,
         status: 'completo', date: new Date().toLocaleDateString('pt-BR'),
         score: exec.score, duration: r.duration,
         issues: {
           critical: r.findings.filter(f => f.type === 'critical').length,
-          warning: r.findings.filter(f => f.type === 'warning').length,
-          info: r.findings.filter(f => f.type === 'info').length,
+          warning:  r.findings.filter(f => f.type === 'warning').length,
+          info:     r.findings.filter(f => f.type === 'info').length,
         },
         checks: selected.map(id => testTypes.find(t => t.id === id)?.label).filter(Boolean),
         findings: r.findings, suggestions: r.suggestions,
-        htmlUrl: r.htmlUrl, pdfUrl: r.pdfUrl,
+        pdfUrl: r.pdfUrl,
       })
       loadReports?.()
     } catch (err) {
@@ -141,105 +190,109 @@ export default function IniciarAutomacao() {
     setStep(1)
   }
 
-  const runMockExecution = () => {
-    const mockSteps = [
-      'Carregando a URL alvo','Verificando título','Verificando meta description',
-      'Verificando imagens sem alt','Verificando formulários','Verificando links quebrados',
-      'Verificando erros de console','Verificando contraste','Verificando viewport',
-      'Verificando HTTPS','Verificando favicon','Verificando imagens grandes',
-      'Verificando botões acessíveis','Capturando screenshot',
-    ]
-    let i = 0
-    const interval = setInterval(() => {
-      if (i >= mockSteps.length) {
-        clearInterval(interval); setProgress(100)
-        const r = generateMockResult()
-        setResult(r)
-        addLog('✅', 'Concluído (modo offline)!', 'success')
-        addReport({
-          id: Date.now(), title: testName || `Auditoria — ${url}`, url, status: 'completo',
-          date: new Date().toLocaleDateString('pt-BR'), score: r.score, duration: '42s',
-          issues: { critical: r.findings.filter(f => f.type === 'critical').length, warning: r.findings.filter(f => f.type === 'warning').length, info: r.findings.filter(f => f.type === 'info').length },
-          checks: selected.map(id => testTypes.find(t => t.id === id)?.label).filter(Boolean),
-          findings: r.findings, suggestions: r.suggestions,
-        })
-        setTimeout(() => setStep(3), 400); return
-      }
-      addLog('▶', mockSteps[i])
-      setTimeout(() => { addLog('✅', mockSteps[i], 'success'); setDoneSteps(d => d+1); setProgress(Math.round(((i+1)/mockSteps.length)*95)) }, 300)
-      i++
-    }, 800)
+  const resetForm = () => {
+    setStep(1); setUrl(''); setTestName(''); setResult(null); setExecutionId(null)
+    setSelected(['nav', 'a11y', 'seo', 'sec']); setCreds({ email: '', username: '', password: '' })
   }
-
-  const generateMockResult = () => {
-    const score = 60 + Math.floor(Math.random() * 35)
-    const findings = [
-      { type: 'warning', title: 'Imagens sem atributo alt', desc: '3 imagens encontradas sem descrição alternativa.' },
-      { type: 'info', title: 'Meta description ausente', desc: 'A página não possui meta description.' },
-    ]
-    if (score < 80) findings.unshift({ type: 'critical', title: 'Campos sem labels acessíveis', desc: '2 campos de formulário sem label associada.' })
-    return { score, findings, suggestions: ['Adicione alt em todas as imagens', 'Configure meta description', 'Associe labels a campos de formulário'], passed: 11, failed: 3, total: 14 }
-  }
-
-  const scoreCls = (s) => s >= 85 ? 'text-success' : s >= 70 ? 'text-warning' : 'text-danger'
-  const scoreBorder = (s) => s >= 85 ? 'border-success/30' : s >= 70 ? 'border-warning/30' : 'border-danger/30'
-  const scoreBg = (s) => s >= 85 ? 'bg-success/10' : s >= 70 ? 'bg-warning/10' : 'bg-danger/10'
-  const issueColors = { critical: '#f87171', warning: '#fbbf24', info: '#22d3ee' }
 
   return (
-    <div className="py-8 px-10 max-w-215 animate-fade-in">
-      <div className="mb-7">
-        <h1 className="text-[28px] font-extrabold text-bright mb-1">Iniciar Automação</h1>
-        <p className="text-[15px] text-muted">
-          A IA testa sua aplicação como um QA experiente e gera um relatório completo
-          {!backendOnline && <span className="ml-2 badge badge-yellow">backend offline</span>}
-        </p>
+    <div className="page animate-fade-in" style={{ maxWidth: 860 }}>
+      <div className="page-hdr">
+        <h1>Iniciar Automação</h1>
+        <p>A IA testa sua aplicação como um QA experiente e gera um relatório completo</p>
       </div>
 
       <StepBar step={step}/>
 
       {/* Step 1 — Config */}
       {step === 1 && (
-        <div className="card p-8 flex flex-col gap-5">
-          <div>
-            <label className="block text-[13px] font-semibold text-muted mb-1.5">URL da Aplicação *</label>
-            <input className="input-field text-[15px]" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://minha-aplicacao.com"/>
+        <div className="card p-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {!backendOnline && (
+            <div className="alert-warn">
+              <span style={{ color: 'var(--warning)', flexShrink: 0, marginTop: 2 }}>⚠</span>
+              <div>
+                <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--warning)' }}>Backend offline</p>
+                <p style={{ fontSize: 12.5, color: 'rgba(251,191,36,0.7)', marginTop: 2 }}>
+                  Execute <code>npm run dev</code> na pasta backend/ para iniciar auditorias reais.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-label">URL da Aplicação *</label>
+            <input className="input" style={{ fontSize: 15 }} value={url} onChange={e => setUrl(e.target.value)} placeholder="https://minha-aplicacao.com"/>
           </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted mb-1.5">Nome do Teste <span className="font-normal text-faint">(opcional)</span></label>
-            <input className="input-field" value={testName} onChange={e => setTestName(e.target.value)} placeholder="Ex: Auditoria de Acessibilidade - v2.1"/>
+
+          <div className="form-group">
+            <label className="form-label">
+              Nome do Teste <span style={{ fontWeight: 400, color: 'var(--faint)' }}>(opcional)</span>
+            </label>
+            <input className="input" value={testName} onChange={e => setTestName(e.target.value)} placeholder="Ex: Auditoria de Acessibilidade v2.1"/>
           </div>
+
+          {/* Credentials toggle */}
           <div>
-            <label className="block text-[13px] font-semibold text-muted mb-3">Tipos de Verificação</label>
-            <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setShowCreds(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: showCreds ? 'var(--primary-l)' : 'var(--muted)', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font)', padding: 0 }}>
+              <span style={{ fontSize: 16 }}>{showCreds ? '🔓' : '🔒'}</span>
+              {showCreds ? 'Ocultar credenciais de acesso' : 'Adicionar credenciais de acesso (login)'}
+              <span style={{ fontSize: 11, opacity: 0.6 }}>{showCreds ? '▲' : '▼'}</span>
+            </button>
+
+            {showCreds && (
+              <div style={{ marginTop: 14, padding: 16, borderRadius: 12, background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.18)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <p style={{ fontSize: 12, color: 'var(--faint)', marginBottom: 2 }}>
+                  As credenciais são usadas apenas durante o teste e <strong style={{ color: 'var(--muted)' }}>não são armazenadas</strong>.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">E-mail</label>
+                    <input className="input" type="email" value={creds.email} onChange={e => setCreds(c => ({ ...c, email: e.target.value }))} placeholder="usuario@exemplo.com"/>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Usuário <span style={{ fontWeight: 400, color: 'var(--faint)' }}>(ou login)</span></label>
+                    <input className="input" value={creds.username} onChange={e => setCreds(c => ({ ...c, username: e.target.value }))} placeholder="nome_de_usuario"/>
+                  </div>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Senha *</label>
+                  <input className="input" type="password" value={creds.password} onChange={e => setCreds(c => ({ ...c, password: e.target.value }))} placeholder="••••••••"/>
+                </div>
+                <p style={{ fontSize: 11.5, color: 'var(--faint)' }}>
+                  💡 A IA tentará preencher automaticamente o formulário de login antes de iniciar os testes.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ marginBottom: 12 }}>Tipos de Verificação</label>
+            <div className="check-grid">
               {testTypes.map(t => {
                 const active = selected.includes(t.id)
                 return (
-                  <div key={t.id} onClick={() => toggle(t.id)}
-                    className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-150
-                      ${active ? 'bg-primary/15 border-primary/40' : 'bg-white/3 border-white/8 hover:border-white/20'}`}>
-                    <div className={`w-4 h-4 rounded border mt-0.5 shrink-0 flex items-center justify-center text-[10px] font-bold
-                      ${active ? 'bg-primary border-primary text-white' : 'border-white/20'}`}>
-                      {active ? '✓' : ''}
-                    </div>
+                  <div key={t.id} onClick={() => toggle(t.id)} className={`check-item${active ? ' on' : ''}`}>
+                    <div className="check-box">{active ? '✓' : ''}</div>
                     <div>
-                      <p className={`text-[13px] font-bold mb-0.5 ${active ? 'text-primary-light' : 'text-bright'}`}>{t.label}</p>
-                      <p className="text-[11px] text-faint">{t.desc}</p>
+                      <p className="check-label">{t.label}</p>
+                      <p className="check-desc">{t.desc}</p>
                     </div>
                   </div>
                 )
               })}
             </div>
           </div>
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <div onClick={() => setRecordVideo(v => !v)}
-              className={`w-10 h-6 rounded-full transition-all duration-200 relative ${recordVideo ? 'bg-primary' : 'bg-white/10'}`}>
-              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ${recordVideo ? 'left-5' : 'left-1'}`}/>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+            <div onClick={() => setRecordVideo(v => !v)} className={`toggle-sw${recordVideo ? ' on' : ''}`}>
+              <div className="toggle-sw-thumb"/>
             </div>
-            <span className="text-[13px] text-muted">Gravar vídeo da execução</span>
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}>Gravar vídeo da execução</span>
           </label>
-          <button onClick={startAudit} disabled={!url}
-            className="btn-primary py-3.5 text-[15px] font-bold disabled:opacity-40 disabled:cursor-not-allowed">
+
+          <button onClick={startAudit} disabled={!url || !backendOnline} className="btn btn-lg btn-primary btn-full">
             🚀 Iniciar Auditoria IA
           </button>
         </div>
@@ -247,41 +300,36 @@ export default function IniciarAutomacao() {
 
       {/* Step 2 — Running */}
       {step === 2 && (
-        <div className="flex flex-col gap-5">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div className="card p-6">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-18 h-18 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-3xl animate-pulse-glow shrink-0">🤖</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(124,58,237,0.1)', border: '2px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }} className="animate-pulse-glow">🤖</div>
               <div>
-                <h3 className="text-base font-bold text-bright mb-1">IA executando testes...</h3>
-                <p className="text-sm text-faint truncate">{url}</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--bright)', marginBottom: 2 }}>IA executando testes...</p>
+                <p style={{ fontSize: 13, color: 'var(--faint)' }} className="truncate">{url || prefill.url}</p>
               </div>
             </div>
-            <div className="flex justify-between text-[13px] mb-1.5">
-              <span className="text-faint">Progresso</span>
-              <span className="font-bold text-primary-light">{progress}%</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+              <span style={{ color: 'var(--faint)' }}>Progresso</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary-l)' }}>{progress}%</span>
             </div>
-            <div className="h-2 rounded-full bg-white/8 overflow-hidden mb-5">
-              <div className="h-full rounded-full bg-linear-to-r from-primary to-cyan transition-all duration-500" style={{ width: `${progress}%` }}/>
+            <div className="progress-track" style={{ marginBottom: 4 }}>
+              <div className="progress-fill" style={{ width: `${progress}%` }}/>
             </div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[13px] font-semibold text-muted">Log de execução</span>
-              <span className="text-[11px] text-faint">{doneSteps}/{totalSteps} steps</span>
-            </div>
-            <div ref={logRef} className="bg-black/30 rounded-xl p-4 h-52 overflow-y-auto font-mono text-[12px] flex flex-col gap-1.5">
+            <p style={{ fontSize: 11, color: 'var(--faint)', textAlign: 'right', marginBottom: 20 }}>{doneSteps}/{totalSteps} steps concluídos</p>
+            <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>Log de execução</p>
+            <div ref={logRef} className="log-term">
               {logs.map((log, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <span className="text-faint shrink-0">{log.time}</span>
+                <div key={i} className="log-row">
+                  <span className="log-time">{log.time}</span>
                   <span>{log.icon}</span>
-                  <span className={log.type === 'error' ? 'text-danger' : log.type === 'success' ? 'text-success' : log.type === 'warning' ? 'text-warning' : 'text-muted'}>
-                    {log.text}
-                  </span>
+                  <span className={`log-${log.type}`}>{log.text}</span>
                 </div>
               ))}
-              {!logs.length && <span className="text-faint">Iniciando...</span>}
+              {!logs.length && <span style={{ color: 'var(--faint)' }}>Inicializando...</span>}
             </div>
           </div>
-          <button onClick={stopExecution}
-            className="py-3 rounded-xl bg-danger/10 text-danger text-[13px] font-semibold border border-danger/20 cursor-pointer hover:bg-danger/20 transition-all duration-200">
+          <button onClick={stopExecution} className="btn btn-danger-soft btn-full" style={{ padding: '12px 20px' }}>
             ⏹ Parar Execução
           </button>
         </div>
@@ -289,42 +337,40 @@ export default function IniciarAutomacao() {
 
       {/* Step 3 — Result */}
       {step === 3 && result && (
-        <div className="flex flex-col gap-5">
-          <div className="card p-8 text-center">
-            <div className={`w-25 h-25 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-black border-[3px] ${scoreBg(result.score)} ${scoreBorder(result.score)}`}>
-              <span className={scoreCls(result.score)}>{result.score}</span>
-            </div>
-            <h2 className={`text-2xl font-extrabold mb-1 ${scoreCls(result.score)}`}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="card p-8" style={{ textAlign: 'center' }}>
+            <ScoreBig score={result.score}/>
+            <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 4, color: result.score >= 85 ? 'var(--success)' : result.score >= 70 ? 'var(--warning)' : 'var(--danger)' }}>
               {result.score >= 85 ? 'Excelente! 🎉' : result.score >= 70 ? 'Bom, com melhorias 💪' : 'Atenção necessária ⚠️'}
             </h2>
-            <p className="text-sm text-faint mb-4">{url}</p>
-            <div className="flex justify-center gap-6 text-[13px]">
-              <span className="text-success font-bold">{result.passed} steps OK</span>
-              <span className="text-danger font-bold">{result.failed} com falha</span>
-              {result.duration && <span className="text-muted">⏱ {result.duration}</span>}
+            <p style={{ fontSize: 13, color: 'var(--faint)', marginBottom: 16 }} className="truncate">{url || prefill.url}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 28, fontSize: 13 }}>
+              <span style={{ color: 'var(--success)', fontWeight: 700 }}>{result.passed} steps OK</span>
+              <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{result.failed} com falha</span>
+              {result.duration && <span style={{ color: 'var(--muted)' }}>⏱ {result.duration}</span>}
             </div>
           </div>
 
-          <div className="flex gap-3">
-            {[['critical','Críticos','#f87171'],['warning','Avisos','#fbbf24'],['info','Infos','#22d3ee']].map(([type, label, color]) => (
-              <div key={type} className="card flex-1 px-4 py-3 text-center">
-                <p className="text-xl font-extrabold" style={{ color }}>{result.findings.filter(f => f.type === type).length}</p>
-                <p className="text-[11px] text-faint mt-0.5">{label}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            {[['critical','Críticos'], ['warning','Avisos'], ['info','Infos']].map(([type, label]) => (
+              <div key={type} className="card px-4 py-3" style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: 22, fontWeight: 800, color: issueColor[type] }}>{result.findings.filter(f => f.type === type).length}</p>
+                <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>{label}</p>
               </div>
             ))}
           </div>
 
           {result.findings.length > 0 && (
             <div className="card p-6">
-              <h4 className="text-[15px] font-bold text-bright mb-4">Issues Encontrados</h4>
-              <div className="flex flex-col gap-2.5">
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--bright)', marginBottom: 16 }}>Issues Encontrados</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {result.findings.map((f, i) => (
-                  <div key={i} className="p-3.5 rounded-[10px] bg-white/3" style={{ borderLeft: `3px solid ${issueColors[f.type]}` }}>
-                    <span className="text-[11px] font-bold" style={{ color: issueColors[f.type] }}>
+                  <div key={i} className={`finding ${f.type}`}>
+                    <span className={`finding-type ${f.type}`}>
                       {f.type === 'critical' ? '🔴 CRÍTICO' : f.type === 'warning' ? '🟡 AVISO' : '🔵 INFO'}
                     </span>
-                    <p className="text-sm font-semibold text-bright mt-1 mb-0.5">{f.title}</p>
-                    <p className="text-[13px] text-muted leading-relaxed">{f.desc}</p>
+                    <p className="finding-title">{f.title}</p>
+                    <p className="finding-desc">{f.desc}</p>
                   </div>
                 ))}
               </div>
@@ -333,33 +379,25 @@ export default function IniciarAutomacao() {
 
           {result.suggestions.length > 0 && (
             <div className="card p-6">
-              <h4 className="text-[15px] font-bold text-bright mb-4">💡 Sugestões de Melhoria</h4>
-              <div className="flex flex-col gap-2">
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--bright)', marginBottom: 16 }}>💡 Sugestões de Melhoria</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {result.suggestions.map((s, i) => (
-                  <div key={i} className="flex gap-2.5 p-3 rounded-[10px] bg-success/6 border border-success/15">
-                    <span className="text-success shrink-0 font-bold">→</span>
-                    <p className="text-[13px] text-muted leading-relaxed">{s}</p>
+                  <div key={i} className="suggestion-row">
+                    <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: 13, flexShrink: 0, marginTop: 2 }}>→</span>
+                    <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>{s}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="flex gap-3 flex-wrap">
-            {result.htmlUrl && (
-              <a href={result.htmlUrl} target="_blank" rel="noopener noreferrer"
-                className="flex-1 py-3 px-5 rounded-xl bg-primary text-white text-[14px] font-semibold text-center hover:bg-primary-hover transition-all duration-200">
-                📄 Ver Relatório HTML
-              </a>
-            )}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {result.pdfUrl && (
-              <a href={result.pdfUrl} target="_blank" rel="noopener noreferrer"
-                className="py-3 px-5 rounded-xl bg-transparent text-muted text-[14px] font-medium border border-white/8 hover:border-primary-light hover:text-primary-light transition-all duration-200">
-                📥 Baixar PDF
+              <a href={result.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary flex-1">
+                📥 Relatório em PDF
               </a>
             )}
-            <button onClick={() => { setStep(1); setUrl(''); setTestName(''); setResult(null); setExecutionId(null) }}
-              className="py-3 px-7 rounded-xl bg-transparent text-muted text-[14px] font-medium border border-white/8 cursor-pointer hover:border-primary-light hover:text-primary-light transition-all duration-200">
+            <button onClick={resetForm} className="btn btn-secondary">
               ↺ Novo Teste
             </button>
           </div>

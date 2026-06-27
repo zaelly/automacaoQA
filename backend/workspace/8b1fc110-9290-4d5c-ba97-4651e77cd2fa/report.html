@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório QATry — Auditoria IA</title>
+<style>
+  :root { --primary: #7c3aed; --success: #34d399; --warning: #fbbf24; --danger: #f87171; --bg: #07071a; --surface: #0e0c2a; --muted: #94a3b8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f1f5f9; padding: 40px 20px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .logo { width: 44px; height: 44px; background: linear-gradient(135deg, #7c3aed, #22d3ee); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: #fff; }
+  h1 { font-size: 22px; font-weight: 800; }
+  h2 { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; margin-top: 28px; }
+  .meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0; }
+  .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; text-align: center; }
+  .card-val { font-size: 28px; font-weight: 800; }
+  .card-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .finding { display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid; }
+  .finding.critical { border-color: var(--danger); }
+  .finding.warning  { border-color: var(--warning); }
+  .finding.info     { border-color: #22d3ee; }
+  .finding strong { display: block; font-size: 14px; margin-bottom: 4px; }
+  .finding p { font-size: 13px; color: var(--muted); }
+  .suggestion { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .step { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .step-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .step.passed .step-icon { background: rgba(52,211,153,0.2);  color: var(--success); }
+  .step.failed .step-icon { background: rgba(248,113,113,0.2); color: var(--danger); }
+  .step-name { font-size: 13px; }
+  .step-dur  { font-size: 11px; color: var(--muted); margin-left: 8px; }
+  .step-error { font-size: 12px; color: var(--danger); margin-top: 4px; font-family: monospace; }
+  footer { margin-top: 48px; text-align: center; font-size: 12px; color: #334155; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">Q</div>
+    <div>
+      <h1>Auditoria IA</h1>
+      <div class="meta">
+        Projeto: Auditoria IA &nbsp;|&nbsp;
+        URL: https://summonersky.com/dawdawdaw &nbsp;|&nbsp;
+        26/06/2026, 22:48:34
+      </div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-val" style="color:#f87171">68</div>
+      <div class="card-label">Score Geral</div>
+    </div>
+    <div class="card">
+      <div class="card-val" style="color:#f87171">2</div>
+      <div class="card-label">Críticos</div>
+    </div>
+    <div class="card">
+      <div class="card-val" style="color:#fbbf24">0</div>
+      <div class="card-label">Avisos</div>
+    </div>
+    <div class="card">
+      <div class="card-val" style="color:#22d3ee">2</div>
+      <div class="card-label">Informações</div>
+    </div>
+    <div class="card">
+      <div class="card-val">5.5s</div>
+      <div class="card-label">Duração</div>
+    </div>
+    <div class="card">
+      <div class="card-val">14/14</div>
+      <div class="card-label">Steps OK</div>
+    </div>
+  </div>
+
+  <h2>Issues Encontrados</h2>
+    <div class="finding critical">
+      <span>🔴</span>
+      <div>
+        <strong>URL inacessível</strong>
+        <p>O servidor retornou status 404 para https://summonersky.com/dawdawdaw</p>
+      </div>
+    </div>
+  
+    <div class="finding info">
+      <span>🔵</span>
+      <div>
+        <strong>Meta description ausente</strong>
+        <p>Nenhuma meta description encontrada. Importante para SEO.</p>
+      </div>
+    </div>
+  
+    <div class="finding critical">
+      <span>🔴</span>
+      <div>
+        <strong>1 erro(s) de JavaScript no console</strong>
+        <p>Failed to load resource: the server responded with a status of 404 ()</p>
+      </div>
+    </div>
+  
+    <div class="finding info">
+      <span>🔵</span>
+      <div>
+        <strong>Favicon não encontrado</strong>
+        <p>A página não possui favicon configurado.</p>
+      </div>
+    </div>
+  
+  <h2>Sugestões de Melhoria</h2>
+    <div class="suggestion">→ Adicione &lt;meta name=&quot;description&quot; content=&quot;...&quot;&gt; a cada página.</div>
+  
+    <div class="suggestion">→ Corrija os erros de JavaScript que aparecem no console do navegador.</div>
+  
+    <div class="suggestion">→ Adicione um favicon.ico ou &lt;link rel=&quot;icon&quot;&gt; para melhorar a identidade visual.</div>
+  
+  <h2>Steps de Execução</h2><div>
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Carregando a URL alvo</span>
+        <span class="step-dur">550ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando título da página</span>
+        <span class="step-dur">8ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando meta description (SEO)</span>
+        <span class="step-dur">40ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando imagens sem atributo alt</span>
+        <span class="step-dur">56ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando acessibilidade dos formulários</span>
+        <span class="step-dur">5ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando links quebrados e âncoras vazias</span>
+        <span class="step-dur">7ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando erros de console JavaScript</span>
+        <span class="step-dur">1.0s</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando contraste de texto (WCAG básico)</span>
+        <span class="step-dur">7ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando configuração de viewport (responsividade)</span>
+        <span class="step-dur">9ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando uso de HTTPS</span>
+        <span class="step-dur">1ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando favicon</span>
+        <span class="step-dur">4ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando tamanho de imagens (performance)</span>
+        <span class="step-dur">7ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Verificando botões com texto acessível</span>
+        <span class="step-dur">5ms</span>
+        
+      </div>
+    </div>
+  
+    <div class="step passed">
+      <span class="step-icon">✓</span>
+      <div class="step-body">
+        <span class="step-name">Capturando screenshot da página</span>
+        <span class="step-dur">52ms</span>
+        
+      </div>
+    </div>
+  </div>
+
+  <footer>Gerado por QATry — 26/06/2026, 22:59:20</footer>
+</div>
+</body>
+</html>

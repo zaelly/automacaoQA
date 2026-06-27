@@ -1,38 +1,56 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuid } = require('uuid');
-const { db } = require('../db');
+const { findOne, findAll, insert, update, remove } = require('../db');
 
-router.get('/', (req, res) => {
-  const { project_id } = req.query;
-  const envs = project_id
-    ? db.prepare('SELECT * FROM environments WHERE project_id = ? ORDER BY type').all(project_id)
-    : db.prepare('SELECT * FROM environments ORDER BY created_at DESC').all();
-  res.json(envs);
+router.get('/', async (req, res) => {
+  try {
+    const { project_id } = req.query;
+    const envs = project_id
+      ? await findAll('environments', { project_id }, { order: 'type', ascending: true })
+      : await findAll('environments', {}, { order: 'created_at', ascending: false });
+    res.json(envs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.post('/', (req, res) => {
-  const { project_id, name, type = 'development', base_url } = req.body;
-  if (!project_id || !name || !base_url) return res.status(400).json({ error: 'project_id, name e base_url são obrigatórios' });
-  const id = uuid();
-  db.prepare('INSERT INTO environments (id, project_id, name, type, base_url) VALUES (?, ?, ?, ?, ?)')
-    .run(id, project_id, name, type, base_url);
-  res.status(201).json(db.prepare('SELECT * FROM environments WHERE id = ?').get(id));
+router.post('/', async (req, res) => {
+  try {
+    const { project_id, name, type = 'development', base_url } = req.body;
+    if (!project_id || !name || !base_url)
+      return res.status(400).json({ error: 'project_id, name e base_url são obrigatórios' });
+    const env = await insert('environments', { id: uuid(), project_id, name, type, base_url });
+    res.status(201).json(env);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.put('/:id', (req, res) => {
-  const { name, type, base_url } = req.body;
-  const env = db.prepare('SELECT * FROM environments WHERE id = ?').get(req.params.id);
-  if (!env) return res.status(404).json({ error: 'Ambiente não encontrado' });
-  db.prepare('UPDATE environments SET name=?, type=?, base_url=? WHERE id=?')
-    .run(name ?? env.name, type ?? env.type, base_url ?? env.base_url, req.params.id);
-  res.json(db.prepare('SELECT * FROM environments WHERE id = ?').get(req.params.id));
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, type, base_url } = req.body;
+    const env = await findOne('environments', { id: req.params.id });
+    if (!env) return res.status(404).json({ error: 'Ambiente não encontrado' });
+    const updated = await update('environments', { id: req.params.id }, {
+      name: name ?? env.name,
+      type: type ?? env.type,
+      base_url: base_url ?? env.base_url,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.delete('/:id', (req, res) => {
-  const result = db.prepare('DELETE FROM environments WHERE id = ?').run(req.params.id);
-  if (result.changes === 0) return res.status(404).json({ error: 'Ambiente não encontrado' });
-  res.json({ ok: true });
+router.delete('/:id', async (req, res) => {
+  try {
+    const n = await remove('environments', { id: req.params.id });
+    if (n === 0) return res.status(404).json({ error: 'Ambiente não encontrado' });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

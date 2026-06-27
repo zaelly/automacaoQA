@@ -23,9 +23,9 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-app">
+    <div className="app-layout">
       <Sidebar />
-      <main className="min-h-screen bg-app overflow-x-hidden" style={{ marginLeft: '260px' }}>
+      <main className="main-content">
         <Outlet />
       </main>
     </div>

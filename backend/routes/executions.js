@@ -1,95 +1,112 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuid } = require('uuid');
-const { db } = require('../db');
+const { supabase, findOne, findAll, insert } = require('../db');
 const { startExecution, stopExecution } = require('../services/executor');
 
-// List executions
-router.get('/', (req, res) => {
-  const { project_id, limit = 50, offset = 0 } = req.query;
-  const execs = project_id
-    ? db.prepare('SELECT * FROM executions WHERE project_id = ? ORDER BY started_at DESC LIMIT ? OFFSET ?').all(project_id, Number(limit), Number(offset))
-    : db.prepare('SELECT * FROM executions ORDER BY started_at DESC LIMIT ? OFFSET ?').all(Number(limit), Number(offset));
-  res.json(execs);
+router.get('/', async (req, res) => {
+  try {
+    const { project_id, limit = 50, offset = 0 } = req.query;
+    const execs = await findAll(
+      'executions',
+      project_id ? { project_id } : {},
+      { order: 'started_at', ascending: false, limit: Number(limit), offset: Number(offset) }
+    );
+    res.json(execs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Get single execution with steps
-router.get('/:id', (req, res) => {
-  const exec = db.prepare('SELECT * FROM executions WHERE id = ?').get(req.params.id);
-  if (!exec) return res.status(404).json({ error: 'Execução não encontrada' });
+router.get('/:id', async (req, res) => {
+  try {
+    const exec = await findOne('executions', { id: req.params.id });
+    if (!exec) return res.status(404).json({ error: 'Execução não encontrada' });
 
-  exec.findings = JSON.parse(exec.findings || '[]');
-  exec.suggestions = JSON.parse(exec.suggestions || '[]');
-  exec.steps = db.prepare('SELECT * FROM execution_steps WHERE execution_id = ? ORDER BY order_index').all(req.params.id);
+    const steps = await findAll('execution_steps', { execution_id: req.params.id }, { order: 'order_index', ascending: true });
 
-  res.json(exec);
+    res.json({
+      ...exec,
+      findings: JSON.parse(exec.findings || '[]'),
+      suggestions: JSON.parse(exec.suggestions || '[]'),
+      steps,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Start new execution (AI audit or project flow)
 router.post('/', async (req, res) => {
-  const {
-    project_id,
-    flow_id,
-    environment_id,
-    base_url,
-    trigger_type = 'manual',
-    record_video = false,
-  } = req.body;
+  try {
+    const {
+      project_id, flow_id, environment_id, base_url,
+      trigger_type = 'manual', record_video = false, flow_name: customFlowName,
+      credentials = null,
+    } = req.body;
 
-  // Resolve base_url from environment or request body
-  let resolvedUrl = base_url;
-  if (environment_id && !base_url) {
-    const env = db.prepare('SELECT * FROM environments WHERE id = ?').get(environment_id);
-    if (env) resolvedUrl = env.base_url;
+    let resolvedUrl = base_url;
+    if (environment_id && !base_url) {
+      const env = await findOne('environments', { id: environment_id });
+      if (env) resolvedUrl = env.base_url;
+    }
+    if (!resolvedUrl) return res.status(400).json({ error: 'URL é obrigatória' });
+
+    const [flow, project] = await Promise.all([
+      flow_id    ? findOne('flows',    { id: flow_id })    : null,
+      project_id ? findOne('projects', { id: project_id }) : null,
+    ]);
+
+    let pid = project_id;
+    if (!pid) {
+      pid = uuid();
+      await insert('projects', { id: pid, name: 'Auditoria IA', base_url: resolvedUrl });
+    }
+
+    const id = uuid();
+    await insert('executions', {
+      id, project_id: pid,
+      flow_id: flow_id || null,
+      environment_id: environment_id || null,
+      flow_name: customFlowName || (flow ? flow.name : 'Auditoria IA'),
+      project_name: project ? project.name : 'Auditoria IA',
+      status: 'pending',
+      trigger_type,
+      base_url: resolvedUrl,
+    });
+
+    startExecution(id, { recordVideo: record_video, credentials }).catch(err => {
+      console.error('Execution error:', err);
+      supabase.from('executions').update({ status: 'failed' }).eq('id', id);
+    });
+
+    res.status(202).json({ id, status: 'pending', message: 'Execução iniciada' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  if (!resolvedUrl) return res.status(400).json({ error: 'URL é obrigatória' });
-
-  const flow = flow_id ? db.prepare('SELECT * FROM flows WHERE id = ?').get(flow_id) : null;
-  const project = project_id ? db.prepare('SELECT * FROM projects WHERE id = ?').get(project_id) : null;
-
-  // Create a temporary project if none provided (AI audit mode)
-  let pid = project_id;
-  if (!pid) {
-    pid = uuid();
-    db.prepare("INSERT INTO projects (id, name, base_url) VALUES (?, ?, ?)").run(pid, 'Auditoria IA', resolvedUrl);
-  }
-
-  const id = uuid();
-  db.prepare(`
-    INSERT INTO executions (id, project_id, flow_id, environment_id, flow_name, project_name, status, trigger_type, base_url)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-  `).run(
-    id, pid, flow_id || null, environment_id || null,
-    flow ? flow.name : 'Auditoria IA',
-    project ? project.name : 'Auditoria IA',
-    trigger_type,
-    resolvedUrl
-  );
-
-  // Start async (don't await — runs in background)
-  startExecution(id, { recordVideo: record_video }).catch(err => {
-    console.error('Execution error:', err);
-    db.prepare("UPDATE executions SET status='failed' WHERE id=?").run(id);
-  });
-
-  res.status(202).json({ id, status: 'pending', message: 'Execução iniciada' });
 });
 
-// Stop execution
-router.post('/:id/stop', (req, res) => {
-  const exec = db.prepare('SELECT * FROM executions WHERE id = ?').get(req.params.id);
-  if (!exec) return res.status(404).json({ error: 'Execução não encontrada' });
-  if (exec.status !== 'running') return res.status(400).json({ error: 'Execução não está em andamento' });
+router.post('/:id/stop', async (req, res) => {
+  try {
+    const exec = await findOne('executions', { id: req.params.id });
+    if (!exec) return res.status(404).json({ error: 'Execução não encontrada' });
+    if (exec.status !== 'running') return res.status(400).json({ error: 'Execução não está em andamento' });
 
-  stopExecution(req.params.id);
-  res.json({ ok: true, message: 'Sinal de parada enviado' });
+    stopExecution(req.params.id);
+    res.json({ ok: true, message: 'Sinal de parada enviado' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Delete execution
-router.delete('/:id', (req, res) => {
-  const result = db.prepare('DELETE FROM executions WHERE id = ?').run(req.params.id);
-  if (result.changes === 0) return res.status(404).json({ error: 'Execução não encontrada' });
-  res.json({ ok: true });
+router.delete('/:id', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('executions').delete().eq('id', req.params.id).select();
+    if (error) throw error;
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Execução não encontrada' });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

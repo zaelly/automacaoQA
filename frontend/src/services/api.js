@@ -26,8 +26,9 @@ async function request(path, options = {}) {
 
 export const api = {
   // ─── Auth ────────────────────────────────────────────────────────────────
-  login:     (data) => request('/auth/login',    { method: 'POST', body: data }),
-  register:  (data) => request('/auth/register', { method: 'POST', body: data }),
+  login:         (data) => request('/auth/login',    { method: 'POST', body: data }),
+  register:      (data) => request('/auth/register', { method: 'POST', body: data }),
+  updateProfile: (data) => request('/auth/profile',  { method: 'PUT',  body: data }),
 
   setToken: (token) => {
     if (token) localStorage.setItem(TOKEN_KEY, token);
@@ -85,7 +86,7 @@ export const api = {
   deleteExecution:  (id)                    => request(`/executions/${id}`, { method: 'DELETE' }),
 
   // ─── Reports ─────────────────────────────────────────────────────────────
-  getReports:    (projectId) => request(projectId ? `/reports?project_id=${projectId}` : '/reports'),
+  getReports:     (projectId) => request(projectId ? `/reports?project_id=${projectId}` : '/reports'),
   getReport:     (id)        => request(`/reports/${id}`),
   reportHtmlUrl: (id)        => `${BASE}/reports/${id}/html`,
   reportPdfUrl:  (id)        => `${BASE}/reports/${id}/pdf`,

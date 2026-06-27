@@ -2,35 +2,37 @@ const cron = require('node-cron');
 const { v4: uuid } = require('uuid');
 const { startExecution } = require('./executor');
 
-const jobs = new Map(); // scheduleId -> cron.Task
+const jobs = new Map();
 
-function runScheduledExecution(schedule) {
-  const { db } = require('../db');
+async function runScheduledExecution(schedule) {
+  const { supabase, findOne, insert } = require('../db');
   const execId = uuid();
 
   try {
-    const env = schedule.environment_id
-      ? db.prepare('SELECT base_url FROM environments WHERE id = ?').get(schedule.environment_id)
-      : null;
-    const project = db.prepare('SELECT base_url, name FROM projects WHERE id = ?').get(schedule.project_id);
-    const flow = db.prepare('SELECT name FROM flows WHERE id = ?').get(schedule.flow_id);
+    const [env, project, flow] = await Promise.all([
+      schedule.environment_id ? findOne('environments', { id: schedule.environment_id }) : Promise.resolve(null),
+      findOne('projects', { id: schedule.project_id }),
+      findOne('flows', { id: schedule.flow_id }),
+    ]);
 
     const baseUrl = env?.base_url || project?.base_url || '';
 
-    db.prepare(`
-      INSERT INTO executions (id, project_id, flow_id, environment_id, flow_name, project_name, status, trigger_type, base_url)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending', 'scheduled', ?)
-    `).run(
-      execId,
-      schedule.project_id,
-      schedule.flow_id,
-      schedule.environment_id || null,
-      flow?.name || 'Flow',
-      project?.name || 'Projeto',
-      baseUrl
-    );
+    await insert('executions', {
+      id: execId,
+      project_id: schedule.project_id,
+      flow_id: schedule.flow_id,
+      environment_id: schedule.environment_id || null,
+      flow_name: flow?.name || 'Flow',
+      project_name: project?.name || 'Projeto',
+      status: 'pending',
+      trigger_type: 'scheduled',
+      base_url: baseUrl,
+    });
 
-    db.prepare("UPDATE schedules SET last_run=datetime('now') WHERE id=?").run(schedule.id);
+    await supabase
+      .from('schedules')
+      .update({ last_run: new Date().toISOString() })
+      .eq('id', schedule.id);
 
     startExecution(execId).catch(err => {
       console.error(`[scheduler] Execution ${execId} failed:`, err.message);
@@ -46,7 +48,6 @@ function addSchedule(schedule) {
     return;
   }
   if (jobs.has(schedule.id)) removeSchedule(schedule.id);
-
   if (!schedule.enabled) return;
 
   const task = cron.schedule(schedule.cron_expression, () => {
@@ -72,9 +73,9 @@ function toggleSchedule(scheduleId, enable) {
   else task.stop();
 }
 
-function initScheduler() {
-  const { db } = require('../db');
-  const schedules = db.prepare('SELECT * FROM schedules WHERE enabled = 1').all();
+async function initScheduler() {
+  const { findAll } = require('../db');
+  const schedules = await findAll('schedules', { enabled: true });
   schedules.forEach(addSchedule);
   console.log(`[scheduler] Initialized ${schedules.length} active schedule(s)`);
 }

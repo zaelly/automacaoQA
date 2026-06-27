@@ -3,58 +3,73 @@ import { TesterContext } from '../context/TesterContext'
 
 const issueColors = { critical: '#f87171', warning: '#fbbf24', info: '#22d3ee' }
 const issueLabels = { critical: '🔴 Crítico', warning: '🟡 Aviso', info: '🔵 Info' }
-const issueBadge  = { critical: 'badge-red',  warning: 'badge-yellow', info: 'badge-cyan' }
 
 function ScoreBadge({ score }) {
-  if (score === null) return <span className="badge badge-yellow">Em andamento</span>
-  const color  = score >= 85 ? '#34d399' : score >= 70 ? '#fbbf24' : '#f87171'
-  const border = score >= 85 ? '#34d39933' : score >= 70 ? '#fbbf2433' : '#f8717133'
-  const bg     = score >= 85 ? 'rgba(52,211,153,0.15)' : score >= 70 ? 'rgba(251,191,36,0.15)' : 'rgba(248,113,113,0.15)'
-  return (
-    <div className="w-13 h-13 rounded-full flex items-center justify-center text-[15px] font-extrabold shrink-0"
-      style={{ background: bg, color, border: `2px solid ${border}` }}>
-      {score}
-    </div>
-  )
+  if (score === null) return <span className="badge badge-warning">Em andamento</span>
+  const cls = score >= 85 ? 'score-success' : score >= 70 ? 'score-warning' : 'score-danger'
+  return <div className={`score-ring ${cls}`}>{score}</div>
 }
 
-function ReportDetail({ report, onClose }) {
-  const [editMode, setEditMode] = useState(false)
-  const [title, setTitle] = useState(report.title)
+function ReportDetail({ report, onClose, onUpdate }) {
+  const [editMode, setEditMode]       = useState(false)
+  const [title, setTitle]             = useState(report.title)
+  const [suggestions, setSuggestions] = useState([...(report.suggestions || [])])
+  const [findings, setFindings]       = useState([...(report.findings || [])])
+  const [newSug, setNewSug]           = useState('')
+  const [newFinding, setNewFinding]   = useState({ type: 'warning', title: '', desc: '' })
+  const [showAddFinding, setShowAddFinding] = useState(false)
+
+  const handleSave = () => {
+    onUpdate({ ...report, title, suggestions, findings })
+    setEditMode(false)
+  }
+
+  const removeSuggestion = (i) => setSuggestions(prev => prev.filter((_, idx) => idx !== i))
+  const addSuggestion = () => {
+    if (!newSug.trim()) return
+    setSuggestions(prev => [...prev, newSug.trim()])
+    setNewSug('')
+  }
+
+  const removeFinding = (i) => setFindings(prev => prev.filter((_, idx) => idx !== i))
+  const addFinding = () => {
+    if (!newFinding.title.trim()) return
+    setFindings(prev => [...prev, { ...newFinding }])
+    setNewFinding({ type: 'warning', title: '', desc: '' })
+    setShowAddFinding(false)
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-200 flex items-start justify-end backdrop-blur-sm" onClick={onClose}>
-      <div className="w-140 h-screen overflow-y-auto bg-surface border-l border-white/8 p-8 flex flex-col gap-6 animate-slide-left"
-        onClick={e => e.stopPropagation()}>
-
+    <div className="modal-overlay" style={{ alignItems: 'flex-start', justifyContent: 'flex-end' }} onClick={onClose}>
+      <div className="side-panel" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-start gap-3">
-          <div className="flex-1">
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div className="flex-1 min-w-0">
             {editMode
-              ? <input className="input-field text-base font-bold mb-2" value={title} onChange={e => setTitle(e.target.value)}/>
-              : <h2 className="text-lg font-extrabold text-bright leading-snug mb-1.5">{title}</h2>
+              ? <input className="input" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }} value={title} onChange={e => setTitle(e.target.value)}/>
+              : <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--bright)', marginBottom: 6, lineHeight: 1.3 }}>{title}</h2>
             }
-            <p className="text-xs text-faint">🔗 {report.url} · {report.date}{report.duration ? ` · ⏱ ${report.duration}` : ''}</p>
+            <p style={{ fontSize: 12, color: 'var(--faint)' }}>🔗 {report.url} · {report.date}{report.duration ? ` · ⏱ ${report.duration}` : ''}</p>
           </div>
-          <button onClick={onClose} className="text-faint text-xl p-1 bg-transparent border-none cursor-pointer hover:text-bright">✕</button>
+          <button onClick={onClose} style={{ color: 'var(--faint)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, padding: 4, flexShrink: 0 }}>✕</button>
         </div>
 
-        {/* Score row */}
+        {/* Score cards */}
         {report.score && (
-          <div className="flex gap-4 flex-wrap">
-            <div className="card flex-1 p-4 flex items-center gap-3.5">
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div className="card flex-1 p-4" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <ScoreBadge score={report.score}/>
               <div>
-                <p className="text-xs text-faint">Score Geral</p>
-                <p className={`text-[22px] font-extrabold ${report.score >= 85 ? 'text-success' : report.score >= 70 ? 'text-warning' : 'text-danger'}`}>
-                  {report.score}/100
-                </p>
+                <p style={{ fontSize: 12, color: 'var(--faint)' }}>Score Geral</p>
+                <p style={{ fontSize: 22, fontWeight: 800, color: report.score >= 85 ? 'var(--success)' : report.score >= 70 ? 'var(--warning)' : 'var(--danger)' }}>{report.score}/100</p>
               </div>
             </div>
-            {[['critical', report.issues.critical], ['warning', report.issues.warning], ['info', report.issues.info]].map(([type, count]) => (
-              <div key={type} className="card px-4 py-3.5 text-center min-w-20">
-                <p className="text-xl font-extrabold" style={{ color: issueColors[type] }}>{count}</p>
-                <p className="text-[11px] text-faint mt-0.5">{type === 'critical' ? 'Críticos' : type === 'warning' ? 'Avisos' : 'Infos'}</p>
+            {[['critical', findings.filter(f => f.type === 'critical').length],
+              ['warning',  findings.filter(f => f.type === 'warning').length],
+              ['info',     findings.filter(f => f.type === 'info').length]].map(([type, count]) => (
+              <div key={type} className="card px-4 py-3" style={{ textAlign: 'center', minWidth: 80 }}>
+                <p style={{ fontSize: 20, fontWeight: 800, color: issueColors[type] }}>{count}</p>
+                <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>{type === 'critical' ? 'Críticos' : type === 'warning' ? 'Avisos' : 'Infos'}</p>
               </div>
             ))}
           </div>
@@ -63,53 +78,123 @@ function ReportDetail({ report, onClose }) {
         {/* Checks */}
         {report.checks?.length > 0 && (
           <div>
-            <h4 className="text-[13px] font-bold text-muted uppercase tracking-[0.5px] mb-2.5">Testes Executados</h4>
-            <div className="flex flex-wrap gap-2">
-              {report.checks.map(c => <span key={c} className="badge badge-purple">{c}</span>)}
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10 }}>Testes Executados</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {report.checks.map(c => <span key={c} className="badge badge-primary">{c}</span>)}
             </div>
           </div>
         )}
 
         {/* Findings */}
-        {report.findings?.length > 0 && (
-          <div>
-            <h4 className="text-[13px] font-bold text-muted uppercase tracking-[0.5px] mb-2.5">Issues Encontrados</h4>
-            <div className="flex flex-col gap-2.5">
-              {report.findings.map((f, i) => (
-                <div key={i} className="card p-3.5" style={{ borderLeft: `3px solid ${issueColors[f.type]}` }}>
-                  <span className={`badge ${issueBadge[f.type]} mb-1.5`}>{issueLabels[f.type]}</span>
-                  <p className="text-sm font-semibold text-bright mb-1">{f.title}</p>
-                  <p className="text-[13px] text-muted leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
-            </div>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Issues Encontrados
+            </p>
+            {editMode && (
+              <button onClick={() => setShowAddFinding(v => !v)}
+                style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(124,58,237,0.25)', color: 'var(--primary-l)', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                + Adicionar
+              </button>
+            )}
           </div>
-        )}
+
+          {editMode && showAddFinding && (
+            <div className="card" style={{ padding: 14, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <select className="input" style={{ padding: '6px 10px', fontSize: 12 }} value={newFinding.type} onChange={e => setNewFinding(f => ({ ...f, type: e.target.value }))}>
+                <option value="critical">🔴 Crítico</option>
+                <option value="warning">🟡 Aviso</option>
+                <option value="info">🔵 Info</option>
+              </select>
+              <input className="input" style={{ fontSize: 13 }} placeholder="Título do issue" value={newFinding.title} onChange={e => setNewFinding(f => ({ ...f, title: e.target.value }))}/>
+              <input className="input" style={{ fontSize: 13 }} placeholder="Descrição (opcional)" value={newFinding.desc} onChange={e => setNewFinding(f => ({ ...f, desc: e.target.value }))}/>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={addFinding} className="btn btn-primary btn-sm flex-1">Adicionar Issue</button>
+                <button onClick={() => setShowAddFinding(false)} className="btn btn-secondary btn-sm">Cancelar</button>
+              </div>
+            </div>
+          )}
+
+          {findings.length === 0 && !editMode && (
+            <p style={{ fontSize: 13, color: 'var(--faint)' }}>Nenhum issue encontrado.</p>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {findings.map((f, i) => (
+              <div key={i} className={`finding ${f.type}`} style={{ position: 'relative' }}>
+                <span className={`finding-type ${f.type}`}>{issueLabels[f.type]}</span>
+                {editMode && (
+                  <button onClick={() => removeFinding(i)}
+                    style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(248,113,113,0.15)', color: 'var(--danger)', border: 'none', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>
+                    ✕
+                  </button>
+                )}
+                {editMode
+                  ? <input className="input" style={{ fontSize: 13, marginTop: 4, marginBottom: 4 }} value={f.title} onChange={e => setFindings(prev => prev.map((item, idx) => idx === i ? { ...item, title: e.target.value } : item))}/>
+                  : <p className="finding-title">{f.title}</p>
+                }
+                {editMode
+                  ? <input className="input" style={{ fontSize: 12 }} value={f.desc || ''} onChange={e => setFindings(prev => prev.map((item, idx) => idx === i ? { ...item, desc: e.target.value } : item))}/>
+                  : f.desc && <p className="finding-desc">{f.desc}</p>
+                }
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Suggestions */}
-        {report.suggestions?.length > 0 && (
-          <div>
-            <h4 className="text-[13px] font-bold text-muted uppercase tracking-[0.5px] mb-2.5">Sugestões de Melhoria</h4>
-            <div className="flex flex-col gap-2">
-              {report.suggestions.map((s, i) => (
-                <div key={i} className="flex gap-2.5 items-start p-3 rounded-[10px] bg-success/6 border border-success/15">
-                  <span className="text-success shrink-0 font-bold">→</span>
-                  <p className="text-[13px] text-muted leading-relaxed">{s}</p>
-                </div>
-              ))}
-            </div>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Sugestões de Melhoria
+            </p>
           </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex gap-2.5 pt-2 mt-auto">
-          <button onClick={() => setEditMode(!editMode)}
-            className="flex-1 py-3 rounded-[10px] bg-primary text-white text-sm font-semibold border-none cursor-pointer hover:bg-primary-hover transition-all duration-200">
-            {editMode ? '💾 Salvar Edições' : '✏️ Editar Relatório'}
-          </button>
-          <button className="py-3 px-5 rounded-[10px] bg-transparent text-muted text-sm font-medium border border-white/8 cursor-pointer hover:border-primary-light hover:text-primary-light transition-all duration-200">
-            📥 Exportar
-          </button>
+          {editMode && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <input className="input flex-1" style={{ fontSize: 13 }} placeholder="Nova sugestão de melhoria..." value={newSug} onChange={e => setNewSug(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addSuggestion()}/>
+              <button onClick={addSuggestion} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>+ Add</button>
+            </div>
+          )}
+
+          {suggestions.length === 0 && !editMode && (
+            <p style={{ fontSize: 13, color: 'var(--faint)' }}>Nenhuma sugestão disponível.</p>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {suggestions.map((s, i) => (
+              <div key={i} className="suggestion-row" style={{ position: 'relative' }}>
+                <span style={{ color: 'var(--success)', fontWeight: 700, flexShrink: 0 }}>→</span>
+                {editMode
+                  ? <input className="input flex-1" style={{ fontSize: 13 }} value={s}
+                      onChange={e => setSuggestions(prev => prev.map((item, idx) => idx === i ? e.target.value : item))}/>
+                  : <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>{s}</p>
+                }
+                {editMode && (
+                  <button onClick={() => removeSuggestion(i)}
+                    style={{ background: 'rgba(248,113,113,0.15)', color: 'var(--danger)', border: 'none', borderRadius: 6, width: 22, height: 22, cursor: 'pointer', fontSize: 13, fontWeight: 700, lineHeight: 1, flexShrink: 0 }}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div style={{ display: 'flex', gap: 10, paddingTop: 8, marginTop: 'auto' }}>
+          {editMode ? (
+            <>
+              <button onClick={handleSave} className="btn btn-primary flex-1">💾 Salvar Edições</button>
+              <button onClick={() => { setTitle(report.title); setSuggestions([...(report.suggestions||[])]); setFindings([...(report.findings||[])]); setEditMode(false) }} className="btn btn-secondary">Cancelar</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setEditMode(true)} className="btn btn-primary flex-1">✏️ Editar Relatório</button>
+              {report.pdfUrl && (
+                <a href={report.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">📥 Baixar PDF</a>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -117,9 +202,9 @@ function ReportDetail({ report, onClose }) {
 }
 
 export default function Relatorios() {
-  const { reports } = useContext(TesterContext)
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('todos')
+  const { reports, setReports } = useContext(TesterContext)
+  const [search, setSearch]   = useState('')
+  const [filter, setFilter]   = useState('todos')
   const [selected, setSelected] = useState(null)
 
   const filtered = reports.filter(r => {
@@ -128,83 +213,92 @@ export default function Relatorios() {
     return matchSearch && matchFilter
   })
 
-  return (
-    <div className="py-8 px-10 max-w-250">
+  const handleUpdate = (updated) => {
+    setReports(prev => prev.map(r => r.id === updated.id ? updated : r))
+    setSelected(updated)
+  }
 
-      <div className="animate-fade-in mb-7">
-        <h1 className="text-[28px] font-extrabold text-bright mb-1">Relatórios</h1>
-        <p className="text-[15px] text-muted">Todos os relatórios gerados pelas suas automações</p>
+  return (
+    <div className="page">
+      <div className="page-hdr animate-fade-in">
+        <h1>Relatórios</h1>
+        <p>Todos os relatórios gerados pelas suas automações</p>
       </div>
 
       {/* Search + filter */}
-      <div className="animate-fade-in flex gap-3 mb-6 flex-wrap">
-        <div className="flex-1 min-w-60 relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint text-base">🔍</span>
-          <input className="input-field pl-10" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar relatório ou URL..."/>
+      <div className="animate-fade-in" style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div className="search-wrap flex-1" style={{ minWidth: 240 }}>
+          <span className="search-icon">🔍</span>
+          <input className="input search-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar relatório ou URL..."/>
         </div>
-        <div className="flex gap-1.5 bg-white/5 rounded-[10px] p-1">
-          {[['todos', 'Todos'], ['completo', 'Completos'], ['em_andamento', 'Em andamento']].map(([val, label]) => (
-            <button key={val} onClick={() => setFilter(val)}
-              className={`px-4 py-1.5 rounded-lg border-none cursor-pointer text-[13px] font-semibold transition-all duration-150
-                ${filter === val ? 'bg-primary text-white' : 'bg-transparent text-muted hover:text-bright'}`}>
-              {label}
-            </button>
+        <div className="filter-tabs">
+          {[['todos','Todos'],['completo','Completos'],['em_andamento','Em andamento']].map(([val, label]) => (
+            <button key={val} onClick={() => setFilter(val)} className={`filter-tab${filter === val ? ' active' : ''}`}>{label}</button>
           ))}
         </div>
       </div>
 
       {/* Mini stats */}
-      <div className="animate-fade-in flex gap-3 mb-6 flex-wrap">
+      <div className="animate-fade-in" style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
         {[
-          { label: 'Total',          value: reports.length,                                    color: 'text-bright' },
-          { label: 'Completos',      value: reports.filter(r => r.status === 'completo').length, color: 'text-success' },
-          { label: 'Em andamento',   value: reports.filter(r => r.status === 'em_andamento').length, color: 'text-warning' },
+          { label: 'Total',        value: reports.length,                                           color: 'var(--bright)'  },
+          { label: 'Completos',    value: reports.filter(r => r.status === 'completo').length,      color: 'var(--success)' },
+          { label: 'Em andamento', value: reports.filter(r => r.status === 'em_andamento').length,  color: 'var(--warning)' },
         ].map(s => (
-          <div key={s.label} className="flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-white/4 border border-white/8">
-            <span className={`text-lg font-extrabold ${s.color}`}>{s.value}</span>
-            <span className="text-[13px] text-faint">{s.label}</span>
+          <div key={s.label} className="stat-pill">
+            <span style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</span>
+            <span style={{ fontSize: 13, color: 'var(--faint)' }}>{s.label}</span>
           </div>
         ))}
       </div>
 
-      {/* Report list */}
-      <div className="animate-fade-in flex flex-col gap-3">
+      {/* List */}
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filtered.length === 0 && (
-          <div className="text-center py-16 text-faint">
-            <p className="text-5xl mb-3">📭</p>
-            <p className="text-[15px]">Nenhum relatório encontrado</p>
+          <div className="empty-state">
+            <div className="empty-state-icon">📭</div>
+            <p style={{ fontSize: 15, color: 'var(--muted)' }}>Nenhum relatório encontrado</p>
           </div>
         )}
         {filtered.map(r => (
-          <div key={r.id} className="card p-5 flex items-center gap-4 cursor-pointer" onClick={() => setSelected(r)}>
+          <div key={r.id} className="card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }} onClick={() => setSelected(r)}>
             <ScoreBadge score={r.score}/>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <p className="text-[15px] font-bold text-bright">{r.title}</p>
-                <span className={`badge ${r.status === 'completo' ? 'badge-green' : 'badge-yellow'}`}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--bright)' }}>{r.title}</p>
+                <span className={`badge ${r.status === 'completo' ? 'badge-success' : 'badge-warning'}`}>
                   {r.status === 'completo' ? '✓ Completo' : '⏳ Em andamento'}
                 </span>
               </div>
-              <p className="text-xs text-faint">🔗 {r.url} · {r.date}{r.duration ? ` · ⏱ ${r.duration}` : ''}</p>
+              <p style={{ fontSize: 12, color: 'var(--faint)' }}>🔗 {r.url} · {r.date}{r.duration ? ` · ⏱ ${r.duration}` : ''}</p>
               {r.checks?.length > 0 && (
-                <div className="flex gap-1.5 mt-2 flex-wrap">
-                  {r.checks.map(c => <span key={c} className="badge badge-purple text-[11px]">{c}</span>)}
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  {r.checks.map(c => <span key={c} className="badge badge-primary">{c}</span>)}
                 </div>
               )}
             </div>
-            <div className="flex flex-col items-end gap-1.5 shrink-0">
-              {r.issues.critical > 0 && <span className="badge badge-red">🔴 {r.issues.critical} críticos</span>}
-              {r.issues.warning  > 0 && <span className="badge badge-yellow">🟡 {r.issues.warning} avisos</span>}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+              {r.issues.critical > 0 && <span className="badge badge-danger">🔴 {r.issues.critical} críticos</span>}
+              {r.issues.warning  > 0 && <span className="badge badge-warning">🟡 {r.issues.warning} avisos</span>}
               {r.issues.info     > 0 && <span className="badge badge-cyan">🔵 {r.issues.info} infos</span>}
-              <button className="mt-1 px-3.5 py-1.5 rounded-lg bg-primary/20 text-primary-light text-xs font-semibold border-none cursor-pointer hover:bg-primary/30 transition-all duration-150">
-                Ver detalhes →
-              </button>
+              <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                <button onClick={e => { e.stopPropagation(); setSelected(r) }}
+                  style={{ padding: '6px 14px', borderRadius: 8, background: 'rgba(124,58,237,0.2)', color: 'var(--primary-l)', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                  Ver detalhes →
+                </button>
+                {r.pdfUrl && (
+                  <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                    style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(52,211,153,0.15)', color: 'var(--success)', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                    📥 PDF
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {selected && <ReportDetail report={selected} onClose={() => setSelected(null)}/>}
+      {selected && <ReportDetail report={selected} onClose={() => setSelected(null)} onUpdate={handleUpdate}/>}
     </div>
   )
 }

@@ -2,62 +2,59 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuid } = require('uuid');
+const { supabase, findOne, findAll } = require('../db');
 
 const WORKSPACE = path.join(__dirname, '..', 'workspace');
 
-// Track running executions so they can be stopped
 const running = new Map();
 
 function getWorkspacePaths(executionId) {
   const dir = path.join(WORKSPACE, executionId);
-  fs.mkdirSync(path.join(dir, 'screenshots'), { recursive: true });
   fs.mkdirSync(path.join(dir, 'videos'), { recursive: true });
-  return {
-    dir,
-    screenshots: path.join(dir, 'screenshots'),
-    videos: path.join(dir, 'videos'),
-  };
+  return { dir, videos: path.join(dir, 'videos') };
 }
 
 function broadcast(executionId, payload) {
   if (global.broadcast) global.broadcast(executionId, payload);
 }
 
-function updateExecution(db, id, fields) {
-  const sets = Object.entries(fields).map(([k]) => `${k}=?`).join(', ');
-  const vals = [...Object.values(fields), id];
-  db.prepare(`UPDATE executions SET ${sets} WHERE id=?`).run(...vals);
+async function updateExecution(id, fields) {
+  const { error } = await supabase.from('executions').update(fields).eq('id', id);
+  if (error) console.error('[executor] updateExecution error:', error.message);
 }
 
-function saveStep(db, executionId, { name, status, screenshotPath = null, errorMessage = null, durationMs = 0, orderIndex = 0 }) {
+async function saveStep(executionId, { name, status, errorMessage = null, durationMs = 0, orderIndex = 0 }) {
   const stepId = uuid();
-  db.prepare(`
-    INSERT INTO execution_steps (id, execution_id, name, status, screenshot_path, error_message, duration_ms, order_index)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(stepId, executionId, name, status, screenshotPath, errorMessage, durationMs, orderIndex);
+  const { error } = await supabase.from('execution_steps').insert({
+    id: stepId,
+    execution_id: executionId,
+    name,
+    status,
+    error_message: errorMessage,
+    duration_ms: durationMs,
+    order_index: orderIndex,
+  });
+  if (error) console.error('[executor] saveStep error:', error.message);
   return stepId;
 }
 
-// ─── Main entry: start a given execution record ────────────────────────────
 async function startExecution(executionId, options = {}) {
-  const { db } = require('../db');
-  const exec = db.prepare('SELECT * FROM executions WHERE id = ?').get(executionId);
+  const exec = await findOne('executions', { id: executionId });
   if (!exec) throw new Error('Execução não encontrada');
 
-  const { dir, screenshots, videos } = getWorkspacePaths(executionId);
+  const { dir, videos } = getWorkspacePaths(executionId);
 
   let stopped = false;
   running.set(executionId, { stop: () => { stopped = true; } });
 
-  updateExecution(db, executionId, { status: 'running' });
+  await updateExecution(executionId, { status: 'running' });
   broadcast(executionId, { type: 'started' });
 
   const startTime = Date.now();
   let browser, context, page;
 
   try {
-    const launchOptions = { headless: true };
-    browser = await chromium.launch(launchOptions);
+    browser = await chromium.launch({ headless: true });
 
     const contextOptions = {};
     if (options.recordVideo) {
@@ -72,7 +69,6 @@ async function startExecution(executionId, options = {}) {
 
     let totalSteps = 0, passedSteps = 0, failedSteps = 0;
 
-    // Step runner helper used inside flows and audit
     const step = async (name, fn) => {
       if (stopped) throw new Error('STOPPED');
       totalSteps++;
@@ -84,36 +80,26 @@ async function startExecution(executionId, options = {}) {
         await fn();
         const dur = Date.now() - t0;
         passedSteps++;
-        saveStep(db, executionId, { name, status: 'passed', durationMs: dur, orderIndex: stepIndex });
+        await saveStep(executionId, { name, status: 'passed', durationMs: dur, orderIndex: stepIndex });
         broadcast(executionId, { type: 'step_pass', name, index: stepIndex, durationMs: dur });
       } catch (err) {
         if (err.message === 'STOPPED') throw err;
         const dur = Date.now() - t0;
         failedSteps++;
-
-        // Auto-screenshot on step failure
-        let ssRel = null;
-        try {
-          const ssFile = path.join(screenshots, `step-${stepIndex}.png`);
-          await page.screenshot({ path: ssFile, fullPage: false });
-          ssRel = `${executionId}/screenshots/step-${stepIndex}.png`;
-        } catch (_) {}
-
-        saveStep(db, executionId, { name, status: 'failed', screenshotPath: ssRel, errorMessage: err.message, durationMs: dur, orderIndex: stepIndex });
-        broadcast(executionId, { type: 'step_fail', name, index: stepIndex, error: err.message, screenshot: ssRel, durationMs: dur });
+        await saveStep(executionId, { name, status: 'failed', errorMessage: err.message, durationMs: dur, orderIndex: stepIndex });
+        broadcast(executionId, { type: 'step_fail', name, index: stepIndex, error: err.message, durationMs: dur });
       }
       return { passedSteps, failedSteps };
     };
 
-    // Choose execution mode: project flow or AI audit
-    const flow = exec.flow_id ? db.prepare('SELECT * FROM flows WHERE id = ?').get(exec.flow_id) : null;
-    const testUser = exec.flow_id
-      ? db.prepare('SELECT * FROM test_users WHERE project_id = ? LIMIT 1').get(exec.project_id)
-      : null;
+    const flow = exec.flow_id ? await findOne('flows', { id: exec.flow_id }) : null;
 
     let findings = [], suggestions = [], score = null;
 
     if (flow) {
+      const [testUser = null] = exec.flow_id
+        ? await findAll('test_users', { project_id: exec.project_id }, { limit: 1 })
+        : [];
       await runFlowScript(flow.script, page, {
         baseUrl: exec.base_url,
         testUser: testUser || { username: '', password: '' },
@@ -121,13 +107,12 @@ async function startExecution(executionId, options = {}) {
       });
       score = failedSteps === 0 ? 100 : Math.round((passedSteps / Math.max(totalSteps, 1)) * 100);
     } else {
-      const result = await runAIAudit(page, exec.base_url, step, consoleErrors);
-      findings = result.findings;
+      const result = await runAIAudit(page, exec.base_url, step, consoleErrors, options.credentials || null);
+      findings    = result.findings;
       suggestions = result.suggestions;
-      score = result.score;
+      score       = result.score;
     }
 
-    // Finalize video
     let videoPath = null;
     if (options.recordVideo) {
       const videoFile = await page.video()?.path();
@@ -137,10 +122,10 @@ async function startExecution(executionId, options = {}) {
     await context.close();
     await browser.close();
 
-    const status = failedSteps === 0 ? 'passed' : (passedSteps === 0 ? 'failed' : 'passed');
+    const status    = failedSteps === 0 ? 'passed' : (passedSteps === 0 ? 'failed' : 'passed');
     const durationMs = Date.now() - startTime;
 
-    updateExecution(db, executionId, {
+    await updateExecution(executionId, {
       status,
       finished_at: new Date().toISOString(),
       duration_ms: durationMs,
@@ -148,9 +133,9 @@ async function startExecution(executionId, options = {}) {
       passed_steps: passedSteps,
       failed_steps: failedSteps,
       score,
-      findings: JSON.stringify(findings),
+      findings:    JSON.stringify(findings),
       suggestions: JSON.stringify(suggestions),
-      video_path: videoPath,
+      video_path:  videoPath,
     });
 
     broadcast(executionId, { type: 'finished', status, score, durationMs, passedSteps, failedSteps, findings, suggestions });
@@ -159,10 +144,10 @@ async function startExecution(executionId, options = {}) {
     try { await browser?.close(); } catch (_) {}
 
     if (err.message === 'STOPPED') {
-      updateExecution(db, executionId, { status: 'stopped', finished_at: new Date().toISOString(), duration_ms: Date.now() - startTime });
+      await updateExecution(executionId, { status: 'stopped', finished_at: new Date().toISOString(), duration_ms: Date.now() - startTime });
       broadcast(executionId, { type: 'finished', status: 'stopped' });
     } else {
-      updateExecution(db, executionId, { status: 'failed', finished_at: new Date().toISOString(), duration_ms: Date.now() - startTime });
+      await updateExecution(executionId, { status: 'failed', finished_at: new Date().toISOString(), duration_ms: Date.now() - startTime });
       broadcast(executionId, { type: 'finished', status: 'failed', error: err.message });
       console.error(`[executor] ${executionId}:`, err.message);
     }
@@ -179,7 +164,6 @@ function stopExecution(executionId) {
 // ─── Flow script runner ─────────────────────────────────────────────────────
 async function runFlowScript(script, page, context) {
   try {
-    // Wrap user script in an async function and call it
     const wrappedScript = `(async function(page, context) {
       const { baseUrl, testUser, step } = context;
       ${script.replace(/^async function flow[^{]+\{/, '').replace(/\}$/, '')}
@@ -188,14 +172,13 @@ async function runFlowScript(script, page, context) {
     await fn(page, context);
   } catch (err) {
     if (err.message === 'STOPPED') throw err;
-    // Log script errors but don't crash the executor
     broadcast('', { type: 'script_error', error: err.message });
   }
 }
 
 // ─── AI Audit mode ──────────────────────────────────────────────────────────
-async function runAIAudit(page, url, step, consoleErrors) {
-  const findings = [];
+async function runAIAudit(page, url, step, consoleErrors, credentials = null) {
+  const findings    = [];
   const suggestions = [];
   let criticalCount = 0, warningCount = 0, infoCount = 0;
 
@@ -206,7 +189,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     else infoCount++;
   };
 
-  // 1. Navegação inicial
   await step('Carregando a URL alvo', async () => {
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     if (!resp || resp.status() >= 400) {
@@ -214,7 +196,31 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 2. Título
+  // ─── Login with credentials if provided ────────────────────────────────────
+  if (credentials && (credentials.email || credentials.username) && credentials.password) {
+    await step('Realizando login na aplicação', async () => {
+      const loginValue = credentials.email || credentials.username;
+
+      const emailInput = await page.$(
+        'input[type="email"], input[name="email"], input[name="login"], input[name="username"], ' +
+        'input[id*="email" i], input[id*="user" i], input[placeholder*="email" i], input[placeholder*="usuário" i], input[placeholder*="usuario" i]'
+      );
+      if (emailInput) await emailInput.fill(loginValue);
+
+      const passInput = await page.$('input[type="password"]');
+      if (passInput) await passInput.fill(credentials.password);
+
+      const submitBtn = await page.$(
+        'button[type="submit"], input[type="submit"], ' +
+        'button:has-text("Login"), button:has-text("Entrar"), button:has-text("Sign in"), button:has-text("Acessar")'
+      );
+      if (submitBtn) {
+        await submitBtn.click();
+        await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+      }
+    });
+  }
+
   await step('Verificando título da página', async () => {
     const title = await page.title();
     if (!title || title.trim() === '') {
@@ -223,7 +229,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 3. Meta description
   await step('Verificando meta description (SEO)', async () => {
     const metaDesc = await page.$('meta[name="description"]');
     if (!metaDesc) {
@@ -232,7 +237,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 4. Imagens sem alt
   await step('Verificando imagens sem atributo alt', async () => {
     const badImgs = await page.$$eval('img', imgs => imgs.filter(i => !i.alt || i.alt.trim() === '').length);
     if (badImgs > 0) {
@@ -241,7 +245,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 5. Formulários sem labels
   await step('Verificando acessibilidade dos formulários', async () => {
     const unlabeledInputs = await page.$$eval('input:not([type="hidden"]):not([type="submit"]):not([type="button"])', inputs => {
       return inputs.filter(input => {
@@ -257,7 +260,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 6. Links com href vazio
   await step('Verificando links quebrados e âncoras vazias', async () => {
     const badLinks = await page.$$eval('a', links => links.filter(a => !a.href || a.href === '#' || a.href === window.location.href + '#').length);
     if (badLinks > 0) {
@@ -266,9 +268,7 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 7. Console errors
   await step('Verificando erros de console JavaScript', async () => {
-    // Wait a bit to collect more errors
     await page.waitForTimeout(1000);
     if (consoleErrors.length > 0) {
       addFinding('critical', `${consoleErrors.length} erro(s) de JavaScript no console`, consoleErrors.slice(0, 3).join(' | '));
@@ -276,7 +276,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 8. Contraste básico — check for text-on-white with very light colors
   await step('Verificando contraste de texto (WCAG básico)', async () => {
     const lowContrast = await page.$$eval('p, h1, h2, h3, h4, span, a, label', els => {
       return els.filter(el => {
@@ -286,7 +285,7 @@ async function runAIAudit(page, url, step, consoleErrors) {
         if (!match) return false;
         const [, r, g, b] = match.map(Number);
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance > 0.85; // Very light text — likely poor contrast
+        return luminance > 0.85;
       }).length;
     });
     if (lowContrast > 3) {
@@ -295,7 +294,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 9. Viewport meta
   await step('Verificando configuração de viewport (responsividade)', async () => {
     const viewportMeta = await page.$('meta[name="viewport"]');
     if (!viewportMeta) {
@@ -304,7 +302,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 10. HTTPS check
   await step('Verificando uso de HTTPS', async () => {
     if (url.startsWith('http://') && !url.includes('localhost') && !url.includes('127.0.0.1')) {
       addFinding('critical', 'Site sem HTTPS', 'O site está sendo servido via HTTP. Dados dos usuários não estão criptografados.');
@@ -312,7 +309,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 11. Favicon
   await step('Verificando favicon', async () => {
     const favicon = await page.$('link[rel*="icon"]');
     if (!favicon) {
@@ -321,7 +317,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 12. Performance — checar imagens grandes
   await step('Verificando tamanho de imagens (performance)', async () => {
     const largeImages = await page.$$eval('img', imgs => {
       return imgs.filter(img => {
@@ -335,7 +330,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 13. Botões sem texto acessível
   await step('Verificando botões com texto acessível', async () => {
     const badButtons = await page.$$eval('button, [role="button"]', btns => {
       return btns.filter(btn => {
@@ -350,12 +344,6 @@ async function runAIAudit(page, url, step, consoleErrors) {
     }
   });
 
-  // 14. Screenshot final da página
-  await step('Capturando screenshot da página', async () => {
-    await page.screenshot({ fullPage: true });
-  });
-
-  // Calculate score: 100 - weighted penalty
   const penalty = criticalCount * 15 + warningCount * 5 + infoCount * 1;
   const score = Math.max(0, Math.min(100, 100 - penalty));
 
