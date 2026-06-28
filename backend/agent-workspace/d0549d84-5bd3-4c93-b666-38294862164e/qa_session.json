@@ -1,0 +1,383 @@
+{
+  "id": "d0549d84-5bd3-4c93-b666-38294862164e",
+  "goal": "Você é um engenheiro de QA.\n\nExecute exatamente as etapas abaixo.\n\n1. Faça login.\n\nUsuário:\nsac@evictus.com.br\n\nSenha:\nGerson!@#1\n\nConfirme explicitamente se o login foi realizado.\n\nCaso não consiga entrar, pare os testes e explique o motivo.\n\n2. Vá para o PDV.\n\n3. Adicione um produto ao carrinho.\n\nInforme:\n\n- Nome do produto\n- Valor\n- Quantidade\n\n4. Altere a quantidade.\n\nInforme:\n\n- Quantidade anterior\n- Nova quantidade\n- Se o total foi recalculado corretamente.\n\n5. Altere o valor unitário.\n\nInforme:\n\n- Valor anterior\n- Novo valor\n- Se o total foi atualizado.\n\n6. Remova o produto.\n\nConfirme que ele desapareceu do carrinho.\n\n7. Finalize a venda.\n\nInforme se foi concluída ou qual erro ocorreu.\n\nPara cada etapa informe:\n\n✅ Funcionou\n\nou\n\n❌ Falhou\n\nExplique exatamente o motivo da falha.\n\nSempre informe:\n\n- URL\n- Elemento clicado\n- Screenshot quando houver erro\n- Mensagem exibida na tela",
+  "baseUrl": "https://dev.notasfacil.com/pos",
+  "status": "completed",
+  "startedAt": "2026-06-28T19:40:30.891Z",
+  "testSummary": {
+    "sessionId": "d0549d84-5bd3-4c93-b666-38294862164e",
+    "goal": "Você é um engenheiro de QA.\n\nExecute exatamente as etapas abaixo.\n\n1. Faça login.\n\nUsuário:\nsac@evictus.com.br\n\nSenha:\nGerson!@#1\n\nConfirme explicitamente se o login foi realizado.\n\nCaso não consiga entrar, pare os testes e explique o motivo.\n\n2. Vá para o PDV.\n\n3. Adicione um produto ao carrinho.\n\nInforme:\n\n- Nome do produto\n- Valor\n- Quantidade\n\n4. Altere a quantidade.\n\nInforme:\n\n- Quantidade anterior\n- Nova quantidade\n- Se o total foi recalculado corretamente.\n\n5. Altere o valor unitário.\n\nInforme:\n\n- Valor anterior\n- Novo valor\n- Se o total foi atualizado.\n\n6. Remova o produto.\n\nConfirme que ele desapareceu do carrinho.\n\n7. Finalize a venda.\n\nInforme se foi concluída ou qual erro ocorreu.\n\nPara cada etapa informe:\n\n✅ Funcionou\n\nou\n\n❌ Falhou\n\nExplique exatamente o motivo da falha.\n\nSempre informe:\n\n- URL\n- Elemento clicado\n- Screenshot quando houver erro\n- Mensagem exibida na tela",
+    "baseUrl": "https://dev.notasfacil.com/pos",
+    "timeline": [
+      {
+        "timestamp": "2026-06-28T19:40:31.523Z",
+        "type": "navigate",
+        "flowName": "navigate",
+        "description": "Abrindo https://dev.notasfacil.com/pos",
+        "url": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.370Z",
+        "type": "success",
+        "flowName": "navigate",
+        "description": "Página carregada em 1549ms",
+        "detail": "Título: \"NOTA FACIL.COM\"",
+        "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-001-inicial.png",
+        "url": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.372Z",
+        "type": "success",
+        "flowName": "SEO & Metadados",
+        "description": "Título: \"NOTA FACIL.COM\"",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.403Z",
+        "type": "warning",
+        "flowName": "SEO & Metadados",
+        "description": "Nenhuma tag H1",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.431Z",
+        "type": "warning",
+        "flowName": "SEO & Metadados",
+        "description": "Meta description ausente",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.774Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Formulário de login detectado",
+        "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-002-login_antes.png",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.797Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo \"Email ou usuário\" encontrado",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.814Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Preenchido com: \"sac@evictus.com.br\"",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.821Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo de senha encontrado",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:33.838Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Senha preenchida",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:34.196Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Campos preenchidos",
+        "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-003-login_preenchido.png",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:34.218Z",
+        "type": "click",
+        "flowName": "Login",
+        "description": "Clicando botão \"Entrar\"",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:37.637Z",
+        "type": "error",
+        "flowName": "Login",
+        "description": "Erro detectado: \"×Usuário logado com sucesso!OKNoCancel\"",
+        "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-004-login_apos_submit.png",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:37.638Z",
+        "type": "skipped",
+        "flowName": "Checkout / PDV",
+        "description": "[Checkout / PDV] Não executado — Login não concluído"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:37.638Z",
+        "type": "skipped",
+        "flowName": "Formulários internos",
+        "description": "[Formulários internos] Não executado — Login não concluído"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:37.638Z",
+        "type": "skipped",
+        "flowName": "Links internos",
+        "description": "[Links internos] Não executado — Login não concluído"
+      },
+      {
+        "timestamp": "2026-06-28T19:40:37.646Z",
+        "type": "warning",
+        "flowName": "Acessibilidade",
+        "description": "2 imagem(ns) sem alt text",
+        "url": "https://dev.notasfacil.com/inicio"
+      }
+    ],
+    "flows": [
+      {
+        "name": "SEO & Metadados",
+        "url": "https://dev.notasfacil.com/login",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T19:40:33.372Z",
+            "type": "success",
+            "flowName": "SEO & Metadados",
+            "description": "Título: \"NOTA FACIL.COM\"",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:33.403Z",
+            "type": "warning",
+            "flowName": "SEO & Metadados",
+            "description": "Nenhuma tag H1",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:33.431Z",
+            "type": "warning",
+            "flowName": "SEO & Metadados",
+            "description": "Meta description ausente",
+            "url": "https://dev.notasfacil.com/login"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Login",
+        "url": "https://dev.notasfacil.com/login",
+        "status": "fail",
+        "events": [
+          {
+            "timestamp": "2026-06-28T19:40:33.774Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Formulário de login detectado",
+            "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-002-login_antes.png",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:33.797Z",
+            "type": "found",
+            "flowName": "Login",
+            "description": "Campo \"Email ou usuário\" encontrado",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:33.814Z",
+            "type": "fill",
+            "flowName": "Login",
+            "description": "Preenchido com: \"sac@evictus.com.br\"",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:33.821Z",
+            "type": "found",
+            "flowName": "Login",
+            "description": "Campo de senha encontrado",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:33.838Z",
+            "type": "fill",
+            "flowName": "Login",
+            "description": "Senha preenchida",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:34.196Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Campos preenchidos",
+            "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-003-login_preenchido.png",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:34.218Z",
+            "type": "click",
+            "flowName": "Login",
+            "description": "Clicando botão \"Entrar\"",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T19:40:37.637Z",
+            "type": "error",
+            "flowName": "Login",
+            "description": "Erro detectado: \"×Usuário logado com sucesso!OKNoCancel\"",
+            "screenshotPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-004-login_apos_submit.png",
+            "url": "https://dev.notasfacil.com/login"
+          }
+        ],
+        "screenshots": [
+          "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-002-login_antes.png",
+          "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-003-login_preenchido.png",
+          "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\screenshots\\step-004-login_apos_submit.png"
+        ],
+        "reason": "Mensagem de erro exibida no formulário",
+        "errorMessage": "×Usuário logado com sucesso!OKNoCancel"
+      },
+      {
+        "name": "Checkout / PDV",
+        "url": "",
+        "status": "skipped",
+        "reason": "Login não concluído",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-28T19:40:37.638Z",
+            "type": "skipped",
+            "flowName": "Checkout / PDV",
+            "description": "[Checkout / PDV] Não executado — Login não concluído"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Formulários internos",
+        "url": "",
+        "status": "skipped",
+        "reason": "Login não concluído",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-28T19:40:37.638Z",
+            "type": "skipped",
+            "flowName": "Formulários internos",
+            "description": "[Formulários internos] Não executado — Login não concluído"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Links internos",
+        "url": "",
+        "status": "skipped",
+        "reason": "Login não concluído",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-28T19:40:37.638Z",
+            "type": "skipped",
+            "flowName": "Links internos",
+            "description": "[Links internos] Não executado — Login não concluído"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Acessibilidade",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "fail",
+        "events": [
+          {
+            "timestamp": "2026-06-28T19:40:37.646Z",
+            "type": "warning",
+            "flowName": "Acessibilidade",
+            "description": "2 imagem(ns) sem alt text",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      }
+    ],
+    "brokenLinks": [],
+    "networkErrors": [
+      {
+        "method": "POST",
+        "url": "https://dev.notasfacil.com/cdn-cgi/rum?",
+        "error": "net::ERR_ABORTED",
+        "timestamp": "2026-06-28T19:40:38.098Z"
+      },
+      {
+        "method": "GET",
+        "url": "https://dev.notasfacil.com//assets/img/logomarcas/icon.png",
+        "status": 404,
+        "duration": 43,
+        "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body></html>\n",
+        "timestamp": "2026-06-28T19:40:38.098Z"
+      }
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "performance": {
+      "ttfb": 82,
+      "fcp": 1916,
+      "domInteractive": 636,
+      "domComplete": 928,
+      "loadEvent": 994,
+      "transferSize": 38398,
+      "resourceCount": 59,
+      "failedResources": 2
+    },
+    "loginStatus": "fail",
+    "loginError": "×Usuário logado com sucesso!OKNoCancel",
+    "videoPath": "D:\\automacaoQA\\backend\\agent-workspace\\d0549d84-5bd3-4c93-b666-38294862164e\\video\\page@89772dfdfadb301e0df8e4640d7eaca4.webm",
+    "totalChecks": 10,
+    "passed": 5,
+    "failed": 2,
+    "warnings": 3,
+    "startedAt": "2026-06-28T19:40:30.891Z",
+    "finishedAt": "2026-06-28T19:40:38.098Z",
+    "durationMs": 7207
+  },
+  "report": {
+    "summary": "O sistema apresentou falha crítica no login, impedindo o acesso a funcionalidades dependentes. Foram identificados problemas de SEO e acessibilidade, além de erros de rede e console.",
+    "overallScore": 20,
+    "findings": [
+      {
+        "title": "Falha no Login",
+        "severity": "critical",
+        "description": "O login falhou com a mensagem '×Usuário logado com sucesso!OKNoCancel', impedindo o acesso ao sistema.",
+        "possibleCause": "Credenciais inválidas ou problema no mecanismo de autenticação.",
+        "howToReproduce": "1. Acesse https://dev.notasfacil.com/pos. 2. Tente logar com as credenciais fornecidas.",
+        "suggestion": "Verificar as credenciais e o mecanismo de autenticação para garantir que estão funcionando corretamente.",
+        "affectedUrl": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "title": "Problemas de SEO",
+        "severity": "low",
+        "description": "Falta de tag H1 e meta description.",
+        "possibleCause": "Omissão na implementação de metadados.",
+        "howToReproduce": "1. Acesse https://dev.notasfacil.com/pos. 2. Verifique a estrutura HTML da página.",
+        "suggestion": "Adicionar tags H1 e meta description para melhorar a acessibilidade e SEO.",
+        "affectedUrl": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "title": "Problemas de Acessibilidade",
+        "severity": "low",
+        "description": "Imagens sem alt text.",
+        "possibleCause": "Omissão na implementação de atributos de acessibilidade.",
+        "howToReproduce": "1. Acesse https://dev.notasfacil.com/pos. 2. Verifique as imagens na página.",
+        "suggestion": "Adicionar atributos alt text às imagens para melhorar a acessibilidade.",
+        "affectedUrl": "https://dev.notasfacil.com/pos"
+      }
+    ],
+    "recommendations": [
+      "Verificar e corrigir o mecanismo de autenticação para garantir que o login funcione corretamente.",
+      "Implementar metadados e atributos de acessibilidade para melhorar a SEO e a acessibilidade do site.",
+      "Realizar testes de usabilidade e acessibilidade para identificar e corrigir problemas."
+    ],
+    "generatedAt": "2026-06-28T19:40:39.900Z",
+    "model": "llama-3.3-70b-versatile"
+  },
+  "finishedAt": "2026-06-28T19:40:39.900Z"
+}

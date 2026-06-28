@@ -1,164 +1,194 @@
 /**
- * agentRoutes — REST API + WebSocket broadcast for AI agent sessions.
+ * agentRoutes — REST API for QA agent sessions.
  *
- * POST /api/agent/sessions        — start a new agent session
- * GET  /api/agent/sessions        — list all sessions
- * GET  /api/agent/sessions/:id    — get session by ID
- * GET  /api/agent/sessions/:id/report — serve HTML report
- * GET  /api/agent/sessions/:id/video  — serve session video
- * DELETE /api/agent/sessions/:id  — delete session
+ * Flow for POST /api/agent/sessions:
+ *   1. TestRunner runs ALL Playwright checks (no AI in the loop)
+ *   2. ONE Groq call analyzes the collected evidence
+ *   3. Results saved to Supabase + disk
+ *
+ * POST   /api/agent/sessions         — start a new session
+ * GET    /api/agent/sessions         — list all sessions
+ * GET    /api/agent/sessions/:id     — get session by ID
+ * DELETE /api/agent/sessions/:id     — delete session
  */
 
 import { Router, Request, Response } from 'express';
 import * as path from 'path';
-import * as fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
-import { AgentExecutor } from '../agent/AgentExecutor';
-import { SessionStorage } from '../storage/SessionStorage';
-import { HtmlReporter } from '../reports/HtmlReporter';
-import type { BroadcastEvent } from '../agent/types';
+import { TestRunner } from '../agent/TestRunner';
+import { GroqClient } from '../llm/GroqClient';
+import { QaSessionStorage } from '../storage/QaSessionStorage';
+import type { BroadcastEvent, QaSession } from '../agent/types';
 
 const WORKSPACE = path.join(__dirname, '..', 'agent-workspace');
-const storage = new SessionStorage(WORKSPACE);
-const reporter = new HtmlReporter();
+const storage   = new QaSessionStorage(WORKSPACE);
 
-// Track active executors so we can abort them
-const activeSessions = new Map<string, AgentExecutor>();
+// Active sessions tracked in memory for live status
+const activeSessions = new Map<string, QaSession>();
 
 export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): Router {
   const router = Router();
 
-  // POST /api/agent/sessions — start a session
+  // ── POST /sessions ──────────────────────────────────────────────────────────
   router.post('/sessions', async (req: Request, res: Response) => {
-    const { goal, baseUrl, config } = req.body;
+    const { goal, baseUrl, credentials } = req.body as {
+      goal: string;
+      baseUrl: string;
+      credentials?: { username?: string; password?: string };
+    };
 
-    if (!goal) return res.status(400).json({ error: 'goal is required' });
-    if (!baseUrl) return res.status(400).json({ error: 'baseUrl is required' });
+    if (!goal || !baseUrl) {
+      return res.status(400).json({ error: '"goal" e "baseUrl" são obrigatórios' });
+    }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' });
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'GROQ_API_KEY não configurado no servidor' });
+    }
 
     const sessionId = uuidv4();
 
-    const executor = new AgentExecutor({
-      sessionId,
+    const session: QaSession = {
+      id: sessionId,
       goal,
       baseUrl,
-      config: config || {},
-      workspaceRoot: WORKSPACE,
-      geminiApiKey: apiKey,
-      broadcast,
+      status: 'running',
+      startedAt: new Date().toISOString(),
+    };
+
+    activeSessions.set(sessionId, session);
+    broadcast({ type: 'session_started', sessionId, payload: { goal, baseUrl } });
+
+    // Run in background
+    runSession(session, apiKey, broadcast, credentials).catch(err => {
+      console.error(`[AgentRoute] Session ${sessionId} fatal:`, err.message);
     });
-
-    activeSessions.set(sessionId, executor);
-
-    // Start in background — return sessionId immediately
-    executor.run()
-      .then(session => {
-        // Generate HTML report when done
-        const reportPath = storage.getReportPath(sessionId);
-        reporter.generate(session, reportPath);
-        session.reportPath = reportPath;
-        storage.save(session);
-        activeSessions.delete(sessionId);
-      })
-      .catch(err => {
-        console.error(`[AgentSession ${sessionId}] fatal:`, err.message);
-        activeSessions.delete(sessionId);
-      });
 
     return res.status(202).json({ sessionId, status: 'started' });
   });
 
-  // GET /api/agent/sessions — list all
-  router.get('/sessions', (_req: Request, res: Response) => {
-    const sessions = storage.listAll().map(s => ({
-      id: s.id,
-      goal: s.goal,
-      baseUrl: s.baseUrl,
-      status: s.status,
-      score: s.score,
-      passedSteps: s.passedSteps,
-      failedSteps: s.failedSteps,
-      startedAt: s.startedAt,
-      finishedAt: s.finishedAt,
-    }));
+  // ── GET /sessions ───────────────────────────────────────────────────────────
+  router.get('/sessions', async (_req: Request, res: Response) => {
+    const saved = await storage.list();
 
-    // Also include any actively running sessions not yet saved
-    activeSessions.forEach((exec, id) => {
-      if (!sessions.find(s => s.id === id)) {
-        const s = exec.getSession();
-        sessions.unshift({
-          id: s.id,
-          goal: s.goal,
-          baseUrl: s.baseUrl,
-          status: s.status,
-          score: s.score,
-          passedSteps: s.passedSteps,
-          failedSteps: s.failedSteps,
-          startedAt: s.startedAt,
-          finishedAt: s.finishedAt,
-        });
-      }
-    });
+    // Merge active (in-memory) sessions at the top
+    const active = Array.from(activeSessions.values());
+    const savedIds = new Set(saved.map(s => s.id));
+    const merged = [
+      ...active.filter(s => !savedIds.has(s.id)).map(summarize),
+      ...saved.map(summarize),
+    ];
 
-    return res.json(sessions);
+    return res.json(merged);
   });
 
-  // GET /api/agent/sessions/:id
-  router.get('/sessions/:id', (req: Request, res: Response) => {
+  // ── GET /sessions/:id ───────────────────────────────────────────────────────
+  router.get('/sessions/:id', async (req: Request, res: Response) => {
     const id = String(req.params.id);
 
-    // Check active first (fresher data)
-    const active = activeSessions.get(id);
-    if (active) {
-      return res.json(active.getSession());
-    }
+    // Live session first (fresher)
+    const live = activeSessions.get(id);
+    if (live) return res.json(live);
 
-    const session = storage.load(id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
+    const session = await storage.load(id);
+    if (!session) return res.status(404).json({ error: 'Sessão não encontrada' });
 
     return res.json(session);
   });
 
-  // GET /api/agent/sessions/:id/report
-  router.get('/sessions/:id/report', (req: Request, res: Response) => {
-    const id = String(req.params.id);
-    const reportPath = storage.getReportPath(id);
-
-    if (!fs.existsSync(reportPath)) {
-      return res.status(404).json({ error: 'Report not generated yet' });
-    }
-
-    return res.sendFile(reportPath);
-  });
-
-  // GET /api/agent/sessions/:id/video
-  router.get('/sessions/:id/video', (req: Request, res: Response) => {
-    const id = String(req.params.id);
-    const videoPath = storage.getVideoPath(id);
-
-    if (!videoPath || !fs.existsSync(videoPath)) {
-      return res.status(404).json({ error: 'Video not found' });
-    }
-
-    return res.sendFile(videoPath);
-  });
-
-  // DELETE /api/agent/sessions/:id
-  router.delete('/sessions/:id', (req: Request, res: Response) => {
+  // ── DELETE /sessions/:id ────────────────────────────────────────────────────
+  router.delete('/sessions/:id', async (req: Request, res: Response) => {
     const id = String(req.params.id);
 
     if (activeSessions.has(id)) {
-      return res.status(409).json({ error: 'Session is still running' });
+      return res.status(409).json({ error: 'Sessão ainda em execução' });
     }
 
-    const deleted = storage.delete(id);
-    if (!deleted) return res.status(404).json({ error: 'Session not found' });
+    const deleted = await storage.delete(id);
+    if (!deleted) return res.status(404).json({ error: 'Sessão não encontrada' });
 
     return res.json({ deleted: true });
   });
 
   return router;
+}
+
+// ─── Background session runner ────────────────────────────────────────────────
+
+async function runSession(
+  session: QaSession,
+  groqApiKey: string,
+  broadcast: (event: BroadcastEvent) => void,
+  credentials?: { username?: string; password?: string },
+): Promise<void> {
+  const { id: sessionId, goal, baseUrl } = session;
+
+  try {
+    // ── Phase 1: Playwright audit ─────────────────────────────────────────────
+    const runner = new TestRunner(sessionId, WORKSPACE, broadcast);
+    const summary = await runner.run(goal, baseUrl, credentials);
+
+    session.testSummary = summary;
+
+    // ── Phase 2: Groq analysis ────────────────────────────────────────────────
+    session.status = 'analyzing';
+    broadcast({
+      type: 'phase_change',
+      sessionId,
+      payload: {
+        phase: 'analyzing',
+        label: 'Analisando com Groq AI...',
+        stats: {
+          total: summary.totalChecks,
+          passed: summary.passed,
+          failed: summary.failed,
+          warnings: summary.warnings,
+        },
+      },
+    });
+
+    const groq = new GroqClient(groqApiKey);
+    const report = await groq.analyzeTestResults(summary);
+
+    session.report     = report;
+    session.status     = 'completed';
+    session.finishedAt = new Date().toISOString();
+
+    broadcast({
+      type: 'report_ready',
+      sessionId,
+      payload: { report, summary },
+    });
+
+    await storage.save(session);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    session.status     = 'failed';
+    session.error      = msg;
+    session.finishedAt = new Date().toISOString();
+
+    broadcast({ type: 'session_error', sessionId, payload: { error: msg } });
+    await storage.save(session).catch(() => {});
+  } finally {
+    activeSessions.delete(sessionId);
+  }
+}
+
+// Trim heavy fields for list views
+function summarize(s: QaSession) {
+  return {
+    id:           s.id,
+    goal:         s.goal,
+    baseUrl:      s.baseUrl,
+    status:       s.status,
+    overallScore: s.report?.overallScore,
+    findingsCount: s.report?.findings?.length ?? 0,
+    passed:       s.testSummary?.passed,
+    failed:       s.testSummary?.failed,
+    warnings:     s.testSummary?.warnings,
+    startedAt:    s.startedAt,
+    finishedAt:   s.finishedAt,
+    error:        s.error,
+  };
 }

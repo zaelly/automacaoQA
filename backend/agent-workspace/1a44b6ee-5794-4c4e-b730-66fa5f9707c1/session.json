@@ -1,0 +1,29 @@
+{
+  "id": "1a44b6ee-5794-4c4e-b730-66fa5f9707c1",
+  "goal": "Teste o fluxo de login com credenciais invalidas: usuário: demo, senha: 123345\n\ncredenciais válidas: usuario:demo, senha: 0koqhGse9B9ThqTH@",
+  "baseUrl": "https://app.notasfacil.com/login",
+  "status": "completed",
+  "steps": [],
+  "startedAt": "2026-06-28T16:19:33.394Z",
+  "passedSteps": 0,
+  "failedSteps": 0,
+  "aiSuggestions": [],
+  "config": {
+    "maxSteps": 50,
+    "headless": true,
+    "timeout": 30000,
+    "screenshotOnEveryStep": true,
+    "videoEnabled": true,
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    }
+  },
+  "plan": [
+    "Execute: Teste o fluxo de login com credenciais invalidas: usuário: demo, senha: 123345\n\ncredenciais válidas: usuario:demo, senha: 0koqhGse9B9ThqTH@"
+  ],
+  "videoPath": "D:\\automacaoQA\\backend\\agent-workspace\\1a44b6ee-5794-4c4e-b730-66fa5f9707c1\\video\\page@f1698f4e9f3607d4720634d76666016f.webm",
+  "finishedAt": "2026-06-28T16:19:43.376Z",
+  "score": 0,
+  "reportPath": "D:\\automacaoQA\\backend\\agent-workspace\\1a44b6ee-5794-4c4e-b730-66fa5f9707c1\\report.html"
+}

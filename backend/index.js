@@ -43,6 +43,11 @@ async function start() {
     });
   };
 
+  // Serve agent workspace files (screenshots, videos)
+  const AGENT_WORKSPACE = path.join(__dirname, 'agent-workspace');
+  if (!fs.existsSync(AGENT_WORKSPACE)) fs.mkdirSync(AGENT_WORKSPACE, { recursive: true });
+  app.use('/agent-files', express.static(AGENT_WORKSPACE));
+
   // AI Agent routes (TypeScript, loaded via tsx)
   const agentBroadcast = (event) => {
     wss.clients.forEach(client => {
