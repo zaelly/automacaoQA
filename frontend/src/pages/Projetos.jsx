@@ -3,6 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import { TesterContext } from '../context/TesterContext'
 import { api } from '../services/api'
 
+function ScreenshotModal({ src, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000,
+               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', maxWidth: '90vw', maxHeight: '85vh' }}>
+        <img src={src} alt="Screenshot" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 10, display: 'block' }}/>
+        <button onClick={onClose}
+          style={{ position: 'absolute', top: -14, right: -14, width: 32, height: 32, borderRadius: '50%',
+                   background: '#f87171', border: 'none', color: '#fff', fontWeight: 900, fontSize: 16,
+                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          ✕
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const issueColors = { critical: '#f87171', warning: '#fbbf24', info: '#22d3ee' }
 const issueLabels = { critical: '🔴 Crítico', warning: '🟡 Aviso', info: '🔵 Info' }
 
@@ -20,10 +39,13 @@ function Modal({ title, onClose, children }) {
   )
 }
 
-function ProjectDetail({ project, onClose, onExecutar }) {
-  const [executions, setExecutions] = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [selected, setSelected]     = useState(null)
+function ProjectDetail({ project, onClose, onExecutar, onRepeat }) {
+  const [executions, setExecutions]   = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [selected, setSelected]       = useState(null)
+  const [selectedSteps, setSelectedSteps] = useState([])
+  const [stepsLoading, setStepsLoading]   = useState(false)
+  const [lightbox, setLightbox]           = useState(null)
 
   useEffect(() => {
     api.getExecutions(project.id, 10)
@@ -40,6 +62,16 @@ function ProjectDetail({ project, onClose, onExecutar }) {
       .finally(() => setLoading(false))
   }, [project.id])
 
+  // Load steps (with screenshots) when selected execution changes
+  useEffect(() => {
+    if (!selected?.id) { setSelectedSteps([]); return }
+    setStepsLoading(true)
+    api.getExecution(selected.id)
+      .then(data => setSelectedSteps(data.steps || []))
+      .catch(() => setSelectedSteps([]))
+      .finally(() => setStepsLoading(false))
+  }, [selected?.id])
+
   const scoreColor = (s) => s >= 85 ? 'var(--success)' : s >= 70 ? 'var(--warning)' : 'var(--danger)'
   const scoreBg    = (s) => s >= 85 ? 'rgba(52,211,153,0.12)' : s >= 70 ? 'rgba(251,191,36,0.12)' : 'rgba(248,113,113,0.12)'
 
@@ -47,6 +79,8 @@ function ProjectDetail({ project, onClose, onExecutar }) {
   const statusCls   = (s) => s === 'passed' ? 'badge-success' : s === 'failed' ? 'badge-danger' : s === 'running' ? 'badge-warning' : 'badge-cyan'
 
   return (
+    <>
+    {lightbox && <ScreenshotModal src={lightbox} onClose={() => setLightbox(null)}/>}
     <div className="modal-overlay" style={{ alignItems: 'flex-start', justifyContent: 'flex-end' }} onClick={onClose}>
       <div className="side-panel" style={{ width: 520 }} onClick={e => e.stopPropagation()}>
         {/* Header */}
@@ -82,27 +116,52 @@ function ProjectDetail({ project, onClose, onExecutar }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {executions.map(e => (
                 <div key={e.id}
-                  onClick={() => setSelected(e)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${selected?.id === e.id ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.06)'}`, background: selected?.id === e.id ? 'rgba(124,58,237,0.1)' : 'rgba(255,255,255,0.02)', transition: 'all 0.15s' }}>
-                  {e.score != null ? (
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: scoreBg(e.score), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: scoreColor(e.score), flexShrink: 0 }}>
-                      {e.score}
+                  style={{ borderRadius: 10, border: `1px solid ${selected?.id === e.id ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.06)'}`, background: selected?.id === e.id ? 'rgba(124,58,237,0.1)' : 'rgba(255,255,255,0.02)', overflow: 'hidden', transition: 'all 0.15s' }}>
+                  <div onClick={() => setSelected(e)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', cursor: 'pointer' }}>
+                    {e.score != null ? (
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: scoreBg(e.score), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: scoreColor(e.score), flexShrink: 0 }}>
+                        {e.score}
+                      </div>
+                    ) : (
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <div className="spinner" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--warning)' }}/>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--bright)' }} className="truncate">
+                        {e.flow_name || 'Auditoria IA'}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>
+                        {e.started_at ? new Date(e.started_at).toLocaleString('pt-BR') : '—'}
+                        {e.duration_ms ? ` · ⏱ ${(e.duration_ms/1000).toFixed(0)}s` : ''}
+                      </p>
                     </div>
-                  ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <div className="spinner" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--warning)' }}/>
+                    <span className={`badge ${statusCls(e.status)}`}>{statusLabel(e.status)}</span>
+                  </div>
+                  {/* Repetir button row */}
+                  {(e.status === 'passed' || e.status === 'failed' || e.status === 'stopped') && (
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 14px', display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => { onClose(); onRepeat(project, e) }}
+                        style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'rgba(124,58,237,0.18)', color: 'var(--primary-l)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        ↺ Repetir com mesmos parâmetros
+                      </button>
+                      <button
+                        onClick={() => { onClose(); onExecutar(project) }}
+                        style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                        + Novo teste
+                      </button>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--bright)' }} className="truncate">
-                      {e.flow_name || 'Auditoria IA'}
-                    </p>
-                    <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>
-                      {e.started_at ? new Date(e.started_at).toLocaleString('pt-BR') : '—'}
-                      {e.duration_ms ? ` · ⏱ ${(e.duration_ms/1000).toFixed(0)}s` : ''}
-                    </p>
-                  </div>
-                  <span className={`badge ${statusCls(e.status)}`}>{statusLabel(e.status)}</span>
+                  {e.status === 'running' && (
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 14px' }}>
+                      <button
+                        onClick={() => { onClose(); onExecutar(project, e.id) }}
+                        style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'rgba(251,191,36,0.15)', color: 'var(--warning)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        ▶ Ver ao vivo
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -160,6 +219,86 @@ function ProjectDetail({ project, onClose, onExecutar }) {
                 </div>
               )}
 
+              {/* Steps with screenshots */}
+              {(selectedSteps.length > 0 || stepsLoading) && (
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Steps Executados
+                  </p>
+                  {stepsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8 }}>
+                      <div className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--primary-l)' }}/>
+                      <span style={{ fontSize: 12, color: 'var(--faint)' }}>Carregando steps...</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {selectedSteps.map((s, i) => {
+                        const hasScreenshot = !!s.screenshot_path
+                        const screenshotUrl = hasScreenshot ? api.fileUrl(s.screenshot_path) : null
+                        return (
+                          <div key={i} style={{
+                            display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                            borderRadius: 8, background: 'rgba(255,255,255,0.02)',
+                            border: `1px solid ${s.status === 'passed' ? 'rgba(52,211,153,0.15)' : s.status === 'failed' ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.05)'}`,
+                          }}>
+                            <span style={{ fontSize: 13, flexShrink: 0 }}>
+                              {s.status === 'passed' ? '✅' : s.status === 'failed' ? '❌' : '⏳'}
+                            </span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 12, color: s.status === 'passed' ? 'var(--success)' : s.status === 'failed' ? 'var(--danger)' : 'var(--muted)', fontWeight: 600 }} className="truncate">
+                                {s.name}
+                              </p>
+                              {s.error_message && (
+                                <p style={{ fontSize: 11, color: 'var(--danger)', marginTop: 2, opacity: 0.85 }} className="line-clamp-2">
+                                  {s.error_message}
+                                </p>
+                              )}
+                              {s.duration_ms > 0 && (
+                                <p style={{ fontSize: 10, color: 'var(--faint)', marginTop: 1 }}>⏱ {s.duration_ms}ms</p>
+                              )}
+                            </div>
+                            {screenshotUrl && (
+                              <button
+                                onClick={() => setLightbox(screenshotUrl)}
+                                title="Ver screenshot do erro"
+                                style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                                <img
+                                  src={screenshotUrl}
+                                  alt="screenshot"
+                                  style={{ width: 52, height: 36, objectFit: 'cover', borderRadius: 5,
+                                           border: '2px solid rgba(248,113,113,0.5)' }}
+                                />
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Screenshots from findings */}
+              {selected.findings.some(f => f.screenshot) && (
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Screenshots Capturados
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {selected.findings.filter(f => f.screenshot).map((f, i) => {
+                      const src = f.screenshot.startsWith('/files/') ? api.fileUrl(f.screenshot.replace('/files/', '')) : f.screenshot
+                      return (
+                        <button key={i} onClick={() => setLightbox(src)}
+                          title={f.title}
+                          style={{ background: 'none', border: '2px solid rgba(124,58,237,0.3)', borderRadius: 8, cursor: 'pointer', padding: 2 }}>
+                          <img src={src} alt={f.title} style={{ width: 80, height: 56, objectFit: 'cover', borderRadius: 6, display: 'block' }}/>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* PDF download */}
               {selected.status !== 'running' && selected.status !== 'pending' && (
                 <a href={api.reportPdfUrl(selected.id)} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-full">
@@ -167,19 +306,12 @@ function ProjectDetail({ project, onClose, onExecutar }) {
                 </a>
               )}
 
-              {/* If running, resume */}
-              {selected.status === 'running' && (
-                <button
-                  onClick={() => { onClose(); onExecutar(project, selected.id) }}
-                  className="btn btn-primary btn-full">
-                  ▶ Ver execução em tempo real
-                </button>
-              )}
             </div>
           )}
         </div>
       </div>
     </div>
+    </>
   )
 }
 
@@ -231,6 +363,16 @@ export default function Projetos() {
       checks:       saved?.checks   || ['nav', 'a11y', 'seo', 'sec'],
       projectId:    p.id,
       resumeExecId: runningExecId || null,
+    }})
+  }
+
+  // Repeat an execution with the same URL/name/projectId
+  const handleRepeat = (p, exec) => {
+    navigate('/automacao', { state: {
+      url:       exec.base_url || p.base_url || '',
+      testName:  exec.flow_name || '',
+      checks:    ['nav', 'a11y', 'seo', 'sec'],
+      projectId: p.id,
     }})
   }
 
@@ -380,6 +522,7 @@ export default function Projetos() {
           project={detailProject}
           onClose={() => setDetailProject(null)}
           onExecutar={handleExecutar}
+          onRepeat={handleRepeat}
         />
       )}
     </div>

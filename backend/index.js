@@ -43,6 +43,17 @@ async function start() {
     });
   };
 
+  // AI Agent routes (TypeScript, loaded via tsx)
+  const agentBroadcast = (event) => {
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ __agent: true, ...event }));
+      }
+    });
+  };
+  const { createAgentRouter } = require('./api/agentRoutes');
+  app.use('/api/agent', createAgentRouter(agentBroadcast));
+
   await initScheduler();
 
   const PORT = process.env.PORT || 3001;

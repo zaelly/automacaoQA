@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
     const {
       project_id, flow_id, environment_id, base_url,
       trigger_type = 'manual', record_video = false, flow_name: customFlowName,
-      credentials = null,
+      credentials = null, checks = null,
     } = req.body;
 
     let resolvedUrl = base_url;
@@ -74,7 +74,7 @@ router.post('/', async (req, res) => {
       base_url: resolvedUrl,
     });
 
-    startExecution(id, { recordVideo: record_video, credentials }).catch(err => {
+    startExecution(id, { recordVideo: record_video, credentials, checks }).catch(err => {
       console.error('Execution error:', err);
       supabase.from('executions').update({ status: 'failed' }).eq('id', id);
     });

@@ -1,0 +1,29 @@
+{
+  "id": "7ed22649-b6db-440c-abbc-345b8033abfc",
+  "goal": "Testar o fluxo de login com email e senha inválidos",
+  "baseUrl": "https://app.notasfacil.com/login",
+  "status": "completed",
+  "steps": [],
+  "startedAt": "2026-06-28T01:05:39.474Z",
+  "passedSteps": 0,
+  "failedSteps": 0,
+  "aiSuggestions": [],
+  "config": {
+    "maxSteps": 50,
+    "headless": true,
+    "timeout": 30000,
+    "screenshotOnEveryStep": true,
+    "videoEnabled": true,
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    }
+  },
+  "plan": [
+    "Execute: Testar o fluxo de login com email e senha inválidos"
+  ],
+  "videoPath": "D:\\automacaoQA\\backend\\agent-workspace\\7ed22649-b6db-440c-abbc-345b8033abfc\\video\\page@adf8d523fc7b4c4a88264a62cf7f1280.webm",
+  "finishedAt": "2026-06-28T01:05:58.002Z",
+  "score": 0,
+  "reportPath": "D:\\automacaoQA\\backend\\agent-workspace\\7ed22649-b6db-440c-abbc-345b8033abfc\\report.html"
+}

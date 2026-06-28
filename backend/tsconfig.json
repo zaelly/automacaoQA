@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@agent/*":     ["agent/*"],
+      "@llm/*":       ["llm/*"],
+      "@playwright/*":["playwright/*"],
+      "@tools/*":     ["tools/*"],
+      "@reports/*":   ["reports/*"],
+      "@storage/*":   ["storage/*"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "workspace", "frontend"]
+}

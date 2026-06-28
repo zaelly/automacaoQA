@@ -5,17 +5,36 @@ import { TesterContext } from '../context/TesterContext'
 import { api, subscribeToExecution } from '../services/api'
 
 const testTypes = [
-  { id: 'nav',   label: 'Navegação e UX',             desc: 'Links, fluxo e usabilidade' },
-  { id: 'forms', label: 'Validação de Formulários',    desc: 'Inputs, labels e validações' },
-  { id: 'a11y',  label: 'Acessibilidade',              desc: 'WCAG, ARIA e contraste' },
-  { id: 'seo',   label: 'SEO Básico',                  desc: 'Meta tags, title e estrutura' },
-  { id: 'perf',  label: 'Performance e Carregamento',  desc: 'Tamanho de assets e imagens' },
-  { id: 'sec',   label: 'Segurança Básica',            desc: 'HTTPS, headers e formulários' },
-  { id: 'links', label: 'Links Quebrados',             desc: 'Links inválidos e âncoras vazias' },
-  { id: 'js',    label: 'Erros de JavaScript',         desc: 'Console errors e exceções' },
+  { id: 'nav',   label: 'Navegação e UX',            desc: 'Links, fluxo e usabilidade' },
+  { id: 'forms', label: 'Validação de Formulários',   desc: 'Inputs, labels e validações' },
+  { id: 'a11y',  label: 'Acessibilidade',             desc: 'WCAG, ARIA e contraste' },
+  { id: 'seo',   label: 'SEO Básico',                 desc: 'Meta tags, title e estrutura' },
+  { id: 'perf',  label: 'Performance e Carregamento', desc: 'Tamanho de assets e imagens' },
+  { id: 'sec',   label: 'Segurança Básica',           desc: 'HTTPS, headers e formulários' },
+  { id: 'links', label: 'Links Quebrados',            desc: 'Links inválidos e âncoras vazias' },
+  { id: 'js',    label: 'Erros de JavaScript',        desc: 'Console errors e exceções' },
 ]
 
 const issueColor = { critical: '#f87171', warning: '#fbbf24', info: '#22d3ee' }
+
+function getBotIcon(name = '') {
+  const n = name.toLowerCase()
+  if (n.includes('login') || n.includes('senha') || n.includes('credencial')) return '🔐'
+  if (n.includes('naveg') || n.includes('url') || n.includes('página')) return '🌐'
+  if (n.includes('formulário') || n.includes('form') || n.includes('input')) return '📝'
+  if (n.includes('botão') || n.includes('button') || n.includes('click')) return '👆'
+  if (n.includes('screenshot') || n.includes('print') || n.includes('captur')) return '📸'
+  if (n.includes('link')) return '🔗'
+  if (n.includes('acessib')) return '♿'
+  if (n.includes('seo') || n.includes('meta') || n.includes('título')) return '🔍'
+  if (n.includes('javascript') || n.includes('erro') || n.includes('console')) return '⚠️'
+  if (n.includes('segurança') || n.includes('https') || n.includes('ssl')) return '🔒'
+  if (n.includes('produto') || n.includes('pdv') || n.includes('venda')) return '🛒'
+  if (n.includes('upload') || n.includes('arquivo')) return '📎'
+  if (n.includes('relatório') || n.includes('report')) return '📊'
+  if (n.includes('finaliz') || n.includes('conclu')) return '✅'
+  return '🤖'
+}
 
 function ScoreBig({ score }) {
   const color  = score >= 85 ? 'var(--success)'  : score >= 70 ? 'var(--warning)'  : 'var(--danger)'
@@ -45,6 +64,116 @@ function StepBar({ step }) {
   )
 }
 
+// ─── Bot live viewer ────────────────────────────────────────────────────────────
+function BotViewer({ url, botActivity }) {
+  const isRunning = botActivity.status === 'running'
+  const isDone    = botActivity.status === 'done'
+  const isFail    = botActivity.status === 'fail'
+
+  const ringColor  = isRunning ? 'rgba(124,58,237,0.5)'  : isDone ? 'rgba(52,211,153,0.5)'  : isFail ? 'rgba(248,113,113,0.5)'  : 'rgba(255,255,255,0.1)'
+  const ringBg     = isRunning ? 'rgba(124,58,237,0.12)' : isDone ? 'rgba(52,211,153,0.12)' : isFail ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.04)'
+  const dotColor   = isRunning ? '#34d399' : isDone ? '#34d399' : '#f87171'
+
+  return (
+    <div className="card" style={{ padding: 20, marginBottom: 0 }}>
+      {/* Bot header row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', border: `2px solid ${ringColor}`, background: ringBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, transition: 'all 0.3s' }}
+          className={isRunning ? 'animate-pulse-glow' : ''}>
+          {botActivity.icon}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--faint)', fontWeight: 600 }}>Bot QA</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, boxShadow: isRunning ? `0 0 6px ${dotColor}` : 'none', transition: 'all 0.3s' }}/>
+              <span style={{ fontSize: 10, color: dotColor, fontWeight: 600, transition: 'all 0.3s' }}>
+                {isRunning ? 'ao vivo' : isDone ? 'concluído' : 'aguardando'}
+              </span>
+            </div>
+          </div>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--bright)', lineHeight: 1.3 }}>
+            {botActivity.step}
+            {isRunning && (
+              <span style={{ display: 'inline-flex', gap: 2, marginLeft: 4, verticalAlign: 'middle' }}>
+                {[0,1,2].map(i => (
+                  <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--primary-l)', display: 'inline-block', animation: `bounce 1.2s ${i * 0.2}s infinite` }}/>
+                ))}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Simulated browser window */}
+      <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+        {/* Browser chrome bar */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(248,113,113,0.6)' }}/>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(251,191,36,0.6)' }}/>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(52,211,153,0.6)' }}/>
+          </div>
+          <div style={{ flex: 1, background: 'rgba(0,0,0,0.25)', borderRadius: 6, padding: '4px 10px', fontSize: 11, color: 'var(--faint)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10 }}>🔒</span>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url || 'https://...'}</span>
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            {isRunning
+              ? <div className="spinner" style={{ width: 12, height: 12, border: '2px solid rgba(124,58,237,0.25)', borderTopColor: 'var(--primary-l)' }}/>
+              : <span style={{ fontSize: 10, color: isDone ? 'var(--success)' : 'var(--faint)' }}>{isDone ? '✓' : '⊙'}</span>
+            }
+          </div>
+        </div>
+
+        {/* Browser body */}
+        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '14px 16px', minHeight: 88 }}>
+          {isRunning && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Skeleton lines animated */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(124,58,237,0.15)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>{botActivity.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ height: 7, borderRadius: 4, background: 'rgba(124,58,237,0.25)', width: '70%', marginBottom: 5, animation: 'shimmer 1.8s infinite' }}/>
+                  <div style={{ height: 5, borderRadius: 4, background: 'rgba(255,255,255,0.07)', width: '45%' }}/>
+                </div>
+              </div>
+              <div style={{ height: 5, borderRadius: 4, background: 'rgba(255,255,255,0.06)', width: '88%' }}/>
+              <div style={{ height: 5, borderRadius: 4, background: 'rgba(255,255,255,0.05)', width: '62%' }}/>
+              <div style={{ marginTop: 4, padding: '5px 10px', borderRadius: 6, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-l)', animation: 'pulse 1s infinite' }}/>
+                <span style={{ fontSize: 11, color: 'var(--primary-l)', fontWeight: 600 }}>Bot executando: {botActivity.step}</span>
+              </div>
+            </div>
+          )}
+          {!isRunning && !isDone && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 60, gap: 10, color: 'var(--faint)', fontSize: 12 }}>
+              <div className="spinner" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.08)', borderTopColor: 'var(--faint)' }}/>
+              Inicializando navegador headless...
+            </div>
+          )}
+          {isDone && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 60, gap: 10, color: 'var(--success)', fontSize: 13, fontWeight: 700 }}>
+              ✅ Navegador concluiu todos os testes
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+          40% { transform: translateY(-4px); opacity: 1; }
+        }
+        @keyframes shimmer {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 export default function IniciarAutomacao() {
   const { addReport, loadReports, backendOnline } = useContext(TesterContext)
   const location = useLocation()
@@ -60,32 +189,40 @@ export default function IniciarAutomacao() {
   const [executionId, setExecutionId] = useState(prefill.resumeExecId || null)
   const [logs, setLogs]               = useState([])
   const [progress, setProgress]       = useState(0)
-  const [totalSteps]                  = useState(14)
+  const [totalSteps, setTotalSteps]   = useState(14)
   const [doneSteps, setDoneSteps]     = useState(0)
   const [result, setResult]           = useState(null)
-  const logRef   = useRef(null)
-  const unsubRef = useRef(null)
+  const [lightbox, setLightbox]       = useState(null)
+
+  // Project binding
+  const [projects, setProjects]       = useState([])
+  const [projectId, setProjectId]     = useState(prefill.projectId || '')
+  const [botActivity, setBotActivity] = useState({ step: 'Aguardando início...', status: 'idle', icon: '🤖' })
+
+  const logRef    = useRef(null)
+  const unsubRef  = useRef(null)
+
+  // Load projects list
+  useEffect(() => {
+    if (!backendOnline) return
+    api.getProjects().then(setProjects).catch(() => {})
+  }, [backendOnline])
+
+  // Auto-fill URL from selected project
+  const handleProjectChange = (pid) => {
+    setProjectId(pid)
+    if (pid) {
+      const proj = projects.find(p => p.id === pid)
+      if (proj?.base_url && !url) setUrl(proj.base_url)
+    }
+  }
 
   // If resuming a running execution, connect immediately
   useEffect(() => {
     if (prefill.resumeExecId) {
       addLog('🔗', `Reconectando à execução #${prefill.resumeExecId.slice(0, 8)}...`)
       const unsub = subscribeToExecution(prefill.resumeExecId, {
-        onAny: (data) => {
-          if (data.type === 'step_start') addLog('▶', data.name)
-          else if (data.type === 'step_pass') {
-            addLog('✅', data.name, 'success')
-            setDoneSteps(d => d + 1)
-            setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
-          } else if (data.type === 'step_fail') {
-            addLog('❌', `${data.name}: ${data.error || 'Falhou'}`, 'error')
-            setDoneSteps(d => d + 1)
-            setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
-          } else if (data.type === 'finished') {
-            setProgress(100)
-            handleFinished(prefill.resumeExecId, data)
-          }
-        }
+        onAny: (data) => handleWsEvent(data, prefill.resumeExecId)
       })
       unsubRef.current = unsub
     }
@@ -96,19 +233,53 @@ export default function IniciarAutomacao() {
 
   const toggle = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
-  const addLog = (icon, text, type = 'info') => {
+  const addLog = (icon, text, type = 'info', screenshotUrl = null) => {
     const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    setLogs(prev => [...prev, { icon, text, type, time }])
+    setLogs(prev => [...prev, { icon, text, type, time, screenshotUrl }])
+  }
+
+  const backendFileUrl = (relPath) => {
+    const base = (import.meta.env.VITE_API_URL || 'http://localhost:5005/api').replace('/api', '')
+    return relPath.startsWith('/') ? `${base}${relPath}` : `${base}/${relPath}`
+  }
+
+  const handleWsEvent = (data, execId) => {
+    if (data.type === 'started' && data.estimatedSteps) {
+      setTotalSteps(data.estimatedSteps)
+      setBotActivity({ step: 'Abrindo navegador...', status: 'running', icon: '🌐' })
+    } else if (data.type === 'step_start') {
+      addLog('▶', data.name)
+      setBotActivity({ step: data.name, status: 'running', icon: getBotIcon(data.name) })
+    } else if (data.type === 'step_pass') {
+      addLog('✅', data.name, 'success')
+      setBotActivity(prev => ({ ...prev, status: 'running' }))
+      setDoneSteps(d => d + 1)
+      setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
+    } else if (data.type === 'step_fail') {
+      addLog('❌', `${data.name}: ${data.error || 'Falhou'}`, 'error', data.screenshotUrl || null)
+      setBotActivity(prev => ({ ...prev, status: 'fail', icon: '❌' }))
+      setDoneSteps(d => d + 1)
+      setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
+      // Recover to running after showing fail
+      setTimeout(() => setBotActivity(prev => prev.status === 'fail' ? { ...prev, status: 'running', icon: '🤖' } : prev), 1500)
+    } else if (data.type === 'finished') {
+      setProgress(100)
+      setBotActivity({ step: 'Finalizando relatório...', status: 'done', icon: '📊' })
+      handleFinished(execId, data)
+    } else if (data.type === 'stopped') {
+      setBotActivity({ step: 'Parado pelo usuário', status: 'idle', icon: '⏹' })
+    }
   }
 
   const startAudit = async () => {
     if (!url) return
     if (!backendOnline) { toast.error('Backend offline — inicie o servidor para executar auditorias.'); return }
     setStep(2); setLogs([]); setProgress(0); setDoneSteps(0); setResult(null)
+    setBotActivity({ step: 'Inicializando...', status: 'idle', icon: '🤖' })
     addLog('🚀', 'Iniciando execução QA...')
 
-    if (prefill.projectId) {
-      localStorage.setItem(`qatry_lastrun_${prefill.projectId}`, JSON.stringify({ url, testName, checks: selected }))
+    if (projectId) {
+      localStorage.setItem(`qatry_lastrun_${projectId}`, JSON.stringify({ url, testName, checks: selected }))
     }
 
     const credentialsPayload = showCreds && (creds.email || creds.username) && creds.password
@@ -117,30 +288,19 @@ export default function IniciarAutomacao() {
 
     try {
       const exec = await api.startExecution({
-        base_url: url,
+        base_url:     url,
         trigger_type: 'manual',
         record_video: recordVideo,
-        flow_name: testName || undefined,
-        credentials: credentialsPayload,
+        flow_name:    testName || undefined,
+        credentials:  credentialsPayload,
+        project_id:   projectId || undefined,
+        checks:       selected,
       })
       setExecutionId(exec.id)
       addLog('🔗', `Execução #${exec.id.slice(0, 8)} criada`)
+      setBotActivity({ step: 'Abrindo navegador...', status: 'running', icon: '🌐' })
       const unsub = subscribeToExecution(exec.id, {
-        onAny: (data) => {
-          if (data.type === 'step_start') addLog('▶', data.name)
-          else if (data.type === 'step_pass') {
-            addLog('✅', data.name, 'success')
-            setDoneSteps(d => d + 1)
-            setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
-          } else if (data.type === 'step_fail') {
-            addLog('❌', `${data.name}: ${data.error || 'Falhou'}`, 'error')
-            setDoneSteps(d => d + 1)
-            setProgress(p => Math.min(95, p + Math.round(100 / totalSteps)))
-          } else if (data.type === 'finished') {
-            setProgress(100)
-            handleFinished(exec.id, data)
-          }
-        }
+        onAny: (data) => handleWsEvent(data, exec.id)
       })
       unsubRef.current = unsub
     } catch (err) {
@@ -167,6 +327,7 @@ export default function IniciarAutomacao() {
       const resolvedTitle = testName || exec.flow_name || `Auditoria — ${url}`
       addReport({
         id: execId, title: resolvedTitle, url: url || exec.base_url,
+        projectName: exec.project_name || (projects.find(p => p.id === projectId)?.name) || undefined,
         status: 'completo', date: new Date().toLocaleDateString('pt-BR'),
         score: exec.score, duration: r.duration,
         issues: {
@@ -190,10 +351,16 @@ export default function IniciarAutomacao() {
     setStep(1)
   }
 
-  const resetForm = () => {
-    setStep(1); setUrl(''); setTestName(''); setResult(null); setExecutionId(null)
-    setSelected(['nav', 'a11y', 'seo', 'sec']); setCreds({ email: '', username: '', password: '' })
+  const resetForm = (keepParams = false) => {
+    setStep(1)
+    setResult(null); setExecutionId(null)
+    if (!keepParams) {
+      setUrl(''); setTestName('')
+      setSelected(['nav', 'a11y', 'seo', 'sec']); setCreds({ email: '', username: '', password: '' })
+    }
   }
+
+  const selectedProject = projects.find(p => p.id === projectId)
 
   return (
     <div className="page animate-fade-in" style={{ maxWidth: 860 }}>
@@ -204,7 +371,7 @@ export default function IniciarAutomacao() {
 
       <StepBar step={step}/>
 
-      {/* Step 1 — Config */}
+      {/* ─── Step 1 — Config ─────────────────────────────────────────── */}
       {step === 1 && (
         <div className="card p-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {!backendOnline && (
@@ -218,6 +385,28 @@ export default function IniciarAutomacao() {
               </div>
             </div>
           )}
+
+          {/* Project selector */}
+          <div className="form-group">
+            <label className="form-label">
+              📁 Projeto <span style={{ fontWeight: 400, color: 'var(--faint)' }}>(opcional — vincula ao histórico do projeto)</span>
+            </label>
+            <select
+              className="input"
+              value={projectId}
+              onChange={e => handleProjectChange(e.target.value)}
+              style={{ cursor: 'pointer' }}>
+              <option value="">— Sem projeto (auditoria avulsa) —</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}{p.base_url ? ` · ${p.base_url}` : ''}</option>
+              ))}
+            </select>
+            {selectedProject && (
+              <p style={{ fontSize: 11, color: 'var(--success)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+                ✓ Vinculado a <strong>{selectedProject.name}</strong> — a execução aparecerá no histórico do projeto
+              </p>
+            )}
+          </div>
 
           <div className="form-group">
             <label className="form-label">URL da Aplicação *</label>
@@ -293,49 +482,81 @@ export default function IniciarAutomacao() {
           </label>
 
           <button onClick={startAudit} disabled={!url || !backendOnline} className="btn btn-lg btn-primary btn-full">
-            🚀 Iniciar Auditoria IA
+            🚀 Iniciar Auditoria IA{selectedProject ? ` no projeto "${selectedProject.name}"` : ''}
           </button>
         </div>
       )}
 
-      {/* Step 2 — Running */}
+      {/* ─── Step 2 — Running ─────────────────────────────────────────── */}
       {step === 2 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Bot viewer */}
+          <BotViewer url={url || prefill.url} botActivity={botActivity}/>
+
+          {/* Progress card */}
           <div className="card p-6">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(124,58,237,0.1)', border: '2px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }} className="animate-pulse-glow">🤖</div>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--bright)', marginBottom: 2 }}>IA executando testes...</p>
-                <p style={{ fontSize: 13, color: 'var(--faint)' }} className="truncate">{url || prefill.url}</p>
-              </div>
-            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
               <span style={{ color: 'var(--faint)' }}>Progresso</span>
               <span style={{ fontWeight: 700, color: 'var(--primary-l)' }}>{progress}%</span>
             </div>
-            <div className="progress-track" style={{ marginBottom: 4 }}>
-              <div className="progress-fill" style={{ width: `${progress}%` }}/>
+            <div className="progress-track" style={{ marginBottom: 6 }}>
+              <div className="progress-fill" style={{ width: `${progress}%`, transition: 'width 0.4s ease' }}/>
             </div>
-            <p style={{ fontSize: 11, color: 'var(--faint)', textAlign: 'right', marginBottom: 20 }}>{doneSteps}/{totalSteps} steps concluídos</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--faint)', marginBottom: 20 }}>
+              <span>{doneSteps}/{totalSteps} steps concluídos</span>
+              {selectedProject && <span>📁 {selectedProject.name}</span>}
+            </div>
+
             <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>Log de execução</p>
             <div ref={logRef} className="log-term">
               {logs.map((log, i) => (
-                <div key={i} className="log-row">
-                  <span className="log-time">{log.time}</span>
-                  <span>{log.icon}</span>
-                  <span className={`log-${log.type}`}>{log.text}</span>
+                <div key={i} style={{ marginBottom: log.screenshotUrl ? 8 : 0 }}>
+                  <div className="log-row">
+                    <span className="log-time">{log.time}</span>
+                    <span>{log.icon}</span>
+                    <span className={`log-${log.type}`}>{log.text}</span>
+                  </div>
+                  {log.screenshotUrl && (
+                    <button
+                      onClick={() => setLightbox(backendFileUrl(log.screenshotUrl))}
+                      title="Ver screenshot do erro"
+                      style={{ display: 'block', marginTop: 4, marginLeft: 68, background: 'none', border: '1px solid rgba(248,113,113,0.4)', borderRadius: 6, padding: 3, cursor: 'pointer' }}>
+                      <img
+                        src={backendFileUrl(log.screenshotUrl)}
+                        alt="erro screenshot"
+                        style={{ height: 72, borderRadius: 4, display: 'block' }}
+                        onError={e => { e.target.style.display = 'none' }}
+                      />
+                      <span style={{ fontSize: 10, color: '#f87171', display: 'block', textAlign: 'center', marginTop: 2 }}>clique para ampliar</span>
+                    </button>
+                  )}
                 </div>
               ))}
               {!logs.length && <span style={{ color: 'var(--faint)' }}>Inicializando...</span>}
             </div>
           </div>
+
           <button onClick={stopExecution} className="btn btn-danger-soft btn-full" style={{ padding: '12px 20px' }}>
             ⏹ Parar Execução
           </button>
+
+          {lightbox && (
+            <div onClick={() => setLightbox(null)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 1000,
+                       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+              <div onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
+                <img src={lightbox} alt="Screenshot" style={{ maxWidth: '90vw', maxHeight: '80vh', borderRadius: 10, display: 'block' }}/>
+                <button onClick={() => setLightbox(null)}
+                  style={{ position: 'absolute', top: -14, right: -14, width: 32, height: 32, borderRadius: '50%',
+                           background: '#f87171', border: 'none', color: '#fff', fontWeight: 900, fontSize: 16,
+                           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Step 3 — Result */}
+      {/* ─── Step 3 — Result ─────────────────────────────────────────── */}
       {step === 3 && result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div className="card p-8" style={{ textAlign: 'center' }}>
@@ -343,7 +564,12 @@ export default function IniciarAutomacao() {
             <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 4, color: result.score >= 85 ? 'var(--success)' : result.score >= 70 ? 'var(--warning)' : 'var(--danger)' }}>
               {result.score >= 85 ? 'Excelente! 🎉' : result.score >= 70 ? 'Bom, com melhorias 💪' : 'Atenção necessária ⚠️'}
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--faint)', marginBottom: 16 }} className="truncate">{url || prefill.url}</p>
+            <p style={{ fontSize: 13, color: 'var(--faint)', marginBottom: 8 }} className="truncate">{url || prefill.url}</p>
+            {selectedProject && (
+              <p style={{ fontSize: 12, color: 'var(--success)', marginBottom: 12 }}>
+                ✓ Salvo em <strong>{selectedProject.name}</strong>
+              </p>
+            )}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 28, fontSize: 13 }}>
               <span style={{ color: 'var(--success)', fontWeight: 700 }}>{result.passed} steps OK</span>
               <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{result.failed} com falha</span>
@@ -397,8 +623,11 @@ export default function IniciarAutomacao() {
                 📥 Relatório em PDF
               </a>
             )}
-            <button onClick={resetForm} className="btn btn-secondary">
-              ↺ Novo Teste
+            <button onClick={() => resetForm(true)} className="btn btn-secondary" title="Repetir com os mesmos parâmetros">
+              ↺ Repetir Teste
+            </button>
+            <button onClick={() => resetForm(false)} className="btn btn-secondary">
+              + Novo Teste
             </button>
           </div>
         </div>

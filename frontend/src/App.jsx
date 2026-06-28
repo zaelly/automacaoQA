@@ -13,6 +13,8 @@ import PerfilUser from './pages/PerfilUser'
 import Relatorios from './pages/Relatorios'
 import IniciarAutomacao from './pages/IniciarAutomacao'
 import Projetos from './pages/Projetos'
+import Flows from './pages/Flows'
+import AgentDashboard from './pages/AgentDashboard'
 
 function ProtectedLayout() {
   const { login } = useContext(TesterContext)
@@ -50,11 +52,13 @@ function App() {
         <Route path="/" element={login ? <Navigate to="/dashboard" replace /> : <Login />} />
 
         <Route element={<ProtectedLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/projetos" element={<Projetos />} />
-          <Route path="/automacao" element={<IniciarAutomacao />} />
+          <Route path="/dashboard"  element={<Dashboard />} />
+          <Route path="/projetos"   element={<Projetos />} />
+          <Route path="/flows"      element={<Flows />} />
+          <Route path="/automacao"  element={<IniciarAutomacao />} />
+          <Route path="/agente"     element={<AgentDashboard />} />
           <Route path="/relatorios" element={<Relatorios />} />
-          <Route path="/perfil" element={<PerfilUser />} />
+          <Route path="/perfil"     element={<PerfilUser />} />
         </Route>
 
         <Route path="*" element={<Navigate to={login ? '/dashboard' : '/'} replace />} />

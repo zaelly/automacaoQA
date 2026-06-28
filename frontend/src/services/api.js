@@ -1,5 +1,6 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:5005/ws';
+const BASE      = import.meta.env.VITE_API_URL || 'http://localhost:5005/api';
+const FILE_BASE = BASE.replace('/api', '');
+const WS_URL    = import.meta.env.VITE_WS_URL || 'ws://localhost:5005/ws';
 
 const TOKEN_KEY = 'qatry_token';
 const USER_KEY  = 'qatry_user';
@@ -90,7 +91,7 @@ export const api = {
   getReport:     (id)        => request(`/reports/${id}`),
   reportHtmlUrl: (id)        => `${BASE}/reports/${id}/html`,
   reportPdfUrl:  (id)        => `${BASE}/reports/${id}/pdf`,
-  fileUrl:       (relPath)   => `http://localhost:3001/files/${relPath}`,
+  fileUrl:       (relPath)   => `${FILE_BASE}/files/${relPath}`,
 
   // ─── Schedules ───────────────────────────────────────────────────────────
   getSchedules:   (projectId) => request(`/schedules?project_id=${projectId}`),

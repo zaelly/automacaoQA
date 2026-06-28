@@ -1,14 +1,17 @@
 {
   "name": "qatry-backend",
-  "version": "1.0.0",
-  "description": "QATry — Backend de automação QA com Playwright",
+  "version": "2.0.0",
+  "description": "QATry — Plataforma de QA com Agente de IA (Gemini + Playwright)",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "install-browsers": "npx playwright install chromium"
+    "start": "tsx index.js",
+    "dev": "tsx watch index.js",
+    "dev:legacy": "nodemon index.js",
+    "install-browsers": "npx playwright install chromium",
+    "build": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@supabase/supabase-js": "^2.108.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
@@ -23,6 +26,12 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.13",
+    "nodemon": "^3.1.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }
