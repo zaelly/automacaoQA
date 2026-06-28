@@ -1,0 +1,575 @@
+{
+  "id": "2dd97a91-419d-4990-a7f0-948cf2ab78ca",
+  "goal": "Verifique se o login funciona",
+  "baseUrl": "https://dev.notasfacil.com/",
+  "status": "completed",
+  "intent": "login",
+  "intentName": "Login",
+  "startedAt": "2026-06-28T20:19:18.521Z",
+  "testSummary": {
+    "sessionId": "2dd97a91-419d-4990-a7f0-948cf2ab78ca",
+    "goal": "Verifique se o login funciona",
+    "baseUrl": "https://dev.notasfacil.com/",
+    "intent": "login",
+    "intentName": "Login",
+    "intentSteps": [
+      "Abrir página de login",
+      "Verificar presença dos campos usuário e senha",
+      "Preencher credenciais válidas",
+      "Submeter formulário e verificar redirecionamento",
+      "Testar login com credenciais inválidas",
+      "Verificar mensagem de erro adequada",
+      "Verificar link \"Esqueci minha senha\" (se existir)"
+    ],
+    "timeline": [
+      {
+        "timestamp": "2026-06-28T20:19:18.836Z",
+        "type": "navigate",
+        "flowName": "navigate",
+        "description": "Abrindo https://dev.notasfacil.com/",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.171Z",
+        "type": "success",
+        "flowName": "navigate",
+        "description": "Página carregada em 3969ms",
+        "detail": "Título: \"NOTA FACIL.COM\"",
+        "screenshotPath": "screenshots/step-001-inicial.png",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.175Z",
+        "type": "success",
+        "flowName": "SEO & Metadados",
+        "description": "Título: \"NOTA FACIL.COM\"",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.222Z",
+        "type": "warning",
+        "flowName": "SEO & Metadados",
+        "description": "Nenhuma tag H1",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.264Z",
+        "type": "warning",
+        "flowName": "SEO & Metadados",
+        "description": "Meta description ausente",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.584Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Formulário de login detectado",
+        "screenshotPath": "screenshots/step-002-login_antes.png",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.616Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo \"Email ou usuário\" encontrado",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.636Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Preenchido com: \"sac@evictus.com.br\"",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.642Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo de senha encontrado",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:23.657Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Senha preenchida",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:24.019Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Campos preenchidos",
+        "screenshotPath": "screenshots/step-003-login_preenchido.png",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:24.037Z",
+        "type": "click",
+        "flowName": "Login",
+        "description": "Clicando botão \"Entrar\"",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:28.695Z",
+        "type": "success",
+        "flowName": "Login",
+        "description": "Login realizado — Redirecionado para https://dev.notasfacil.com/inicio",
+        "screenshotPath": "screenshots/step-004-login_apos_submit.png",
+        "url": "https://dev.notasfacil.com/"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:28.696Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "🔐 Intenção: Login",
+        "detail": "Verificar autenticação e controle de acesso",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.139Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Testando na página atual — nenhuma URL específica encontrada para Login",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.155Z",
+        "type": "warning",
+        "flowName": "Login",
+        "description": "Nenhum elemento específico de Login detectado na página",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.160Z",
+        "type": "info",
+        "flowName": "Inventário de Elementos",
+        "description": "2 formulário(s) · 47 botão(ões) · 8 campo(s) · 127 link(s)",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.180Z",
+        "type": "info",
+        "flowName": "Links",
+        "description": "Verificando 10 de 99 link(s) interno(s)",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.278Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Novo Potencialize seu negócio — conheça nossos módulos e planos\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.368Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"https://dev.notasfacil.com/admin/geral\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.449Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Sair\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.554Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Início\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.652Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Clientes\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.737Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Fideliza Fácil\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.817Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Fornecedores\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.896Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Transportadoras\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:29.976Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Funcionários\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:30.059Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Técnicos\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T20:19:30.243Z",
+        "type": "warning",
+        "flowName": "Acessibilidade",
+        "description": "2 imagem(ns) sem alt text",
+        "url": "https://dev.notasfacil.com/inicio"
+      }
+    ],
+    "flows": [
+      {
+        "name": "SEO & Metadados",
+        "url": "https://dev.notasfacil.com/",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T20:19:23.175Z",
+            "type": "success",
+            "flowName": "SEO & Metadados",
+            "description": "Título: \"NOTA FACIL.COM\"",
+            "url": "https://dev.notasfacil.com/"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:23.222Z",
+            "type": "warning",
+            "flowName": "SEO & Metadados",
+            "description": "Nenhuma tag H1",
+            "url": "https://dev.notasfacil.com/"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:23.264Z",
+            "type": "warning",
+            "flowName": "SEO & Metadados",
+            "description": "Meta description ausente",
+            "url": "https://dev.notasfacil.com/"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Login",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T20:19:28.696Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "🔐 Intenção: Login",
+            "detail": "Verificar autenticação e controle de acesso",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.139Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Testando na página atual — nenhuma URL específica encontrada para Login",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.155Z",
+            "type": "warning",
+            "flowName": "Login",
+            "description": "Nenhum elemento específico de Login detectado na página",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": [
+          "screenshots/step-005-login_final.png"
+        ]
+      },
+      {
+        "name": "Inventário de Elementos",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T20:19:29.160Z",
+            "type": "info",
+            "flowName": "Inventário de Elementos",
+            "description": "2 formulário(s) · 47 botão(ões) · 8 campo(s) · 127 link(s)",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Links",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "fail",
+        "events": [
+          {
+            "timestamp": "2026-06-28T20:19:29.180Z",
+            "type": "info",
+            "flowName": "Links",
+            "description": "Verificando 10 de 99 link(s) interno(s)",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.278Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Novo Potencialize seu negócio — conheça nossos módulos e planos\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.368Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"https://dev.notasfacil.com/admin/geral\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.449Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Sair\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.554Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Início\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.652Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Clientes\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.737Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Fideliza Fácil\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.817Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Fornecedores\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.896Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Transportadoras\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:29.976Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Funcionários\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T20:19:30.059Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Técnicos\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Acessibilidade",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "fail",
+        "events": [
+          {
+            "timestamp": "2026-06-28T20:19:30.243Z",
+            "type": "warning",
+            "flowName": "Acessibilidade",
+            "description": "2 imagem(ns) sem alt text",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      }
+    ],
+    "brokenLinks": [
+      {
+        "text": "Novo Potencialize seu negócio — conheça nossos módulos e planos",
+        "href": "https://dev.notasfacil.com/modulos",
+        "status": 404,
+        "elementHtml": "<a href=\"/modulos\">\n      <span class=\"promo-tag\">Novo</span>\n      Potencialize seu negócio — conheça nossos módulos e planos\n      <i class=\"fas fa-arrow-right promo-arrow\"></i>\n    </a>"
+      },
+      {
+        "text": "(sem texto)",
+        "href": "https://dev.notasfacil.com/admin/geral",
+        "status": 404,
+        "elementHtml": "<a href=\"/admin/geral\" class=\"nav-link text-secondary p-0\" id=\"wpp-monitor-link\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"WhatsApp Desconectado\" role=\"button\" aria-label=\"Status WhatsApp\">"
+      },
+      {
+        "text": "Sair",
+        "href": "https://dev.notasfacil.com/login/logout",
+        "status": 404,
+        "elementHtml": "<a class=\"nav-link\" href=\"/login/logout\">\n        Sair\n        <i class=\"fas fa-sign-out-alt\"></i>\n      </a>"
+      },
+      {
+        "text": "Início",
+        "href": "https://dev.notasfacil.com/inicio",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/inicio\" class=\"nav-link active\">\n                            <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                <path d=\"M3 9l9-7 9 7v11a2 2 "
+      },
+      {
+        "text": "Clientes",
+        "href": "https://dev.notasfacil.com/clientes",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/clientes\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <path d=\"M17 21v-2a4 4 0 "
+      },
+      {
+        "text": "Fideliza Fácil",
+        "href": "https://dev.notasfacil.com/fidelizaFacil",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/fidelizaFacil\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <path d=\"M20.84 4.61"
+      },
+      {
+        "text": "Fornecedores",
+        "href": "https://dev.notasfacil.com/fornecedores",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/fornecedores\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <path d=\"M20 7h-7L9 3"
+      },
+      {
+        "text": "Transportadoras",
+        "href": "https://dev.notasfacil.com/transportadoras",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/transportadoras\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <rect x=\"1\" y=\"3\" "
+      },
+      {
+        "text": "Funcionários",
+        "href": "https://dev.notasfacil.com/funcionarios",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/funcionarios\" class=\"nav-link \">\n                                        <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                            <path"
+      },
+      {
+        "text": "Técnicos",
+        "href": "https://dev.notasfacil.com/tecnicos",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/tecnicos\" class=\"nav-link \">\n                                        <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                            <path d=\""
+      }
+    ],
+    "networkErrors": [
+      {
+        "method": "POST",
+        "url": "https://dev.notasfacil.com/cdn-cgi/rum?",
+        "error": "net::ERR_ABORTED",
+        "timestamp": "2026-06-28T20:19:30.686Z"
+      },
+      {
+        "method": "GET",
+        "url": "https://dev.notasfacil.com//assets/img/logomarcas/icon.png",
+        "status": 404,
+        "duration": 39,
+        "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body></html>\n",
+        "timestamp": "2026-06-28T20:19:30.686Z"
+      }
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "performance": {
+      "ttfb": 86,
+      "fcp": 3024,
+      "domInteractive": 751,
+      "domComplete": 1082,
+      "loadEvent": 1149,
+      "transferSize": 38378,
+      "resourceCount": 59,
+      "failedResources": 2
+    },
+    "loginStatus": "pass",
+    "videoPath": "video/page@b3cce4ee92bdde568947435a9df258d5.webm",
+    "totalChecks": 21,
+    "passed": 6,
+    "failed": 11,
+    "warnings": 3,
+    "startedAt": "2026-06-28T20:19:18.523Z",
+    "finishedAt": "2026-06-28T20:19:30.686Z",
+    "durationMs": 12163
+  },
+  "report": {
+    "summary": "O sistema apresentou problemas significativos com links quebrados e acessibilidade, mas o login foi bem-sucedido. A performance também apresentou alguns problemas, com um FCP lento.",
+    "overallScore": 60,
+    "findings": [
+      {
+        "title": "Links Quebrados",
+        "severity": "high",
+        "description": "Vários links na página retornaram erro 404, indicando que as URLs estão incorretas ou os recursos não existem.",
+        "possibleCause": "Problemas de configuração do servidor ou erros no código da aplicação.",
+        "howToReproduce": "1. Acesse a página https://dev.notasfacil.com/. 2. Clique em qualquer um dos links quebrados listados.",
+        "suggestion": "Verificar a configuração do servidor e o código da aplicação para garantir que as URLs estejam corretas e os recursos existam.",
+        "affectedUrl": "https://dev.notasfacil.com/"
+      },
+      {
+        "title": "Problemas de Acessibilidade",
+        "severity": "low",
+        "description": "Imagens sem texto alternativo, o que pode dificultar a acessibilidade para usuários com deficiência visual.",
+        "possibleCause": "Falta de implementação de texto alternativo para imagens.",
+        "howToReproduce": "1. Acesse a página https://dev.notasfacil.com/. 2. Verifique as imagens para garantir que tenham texto alternativo.",
+        "suggestion": "Adicionar texto alternativo para todas as imagens na página.",
+        "affectedUrl": "https://dev.notasfacil.com/"
+      },
+      {
+        "title": "Performance Lenta",
+        "severity": "medium",
+        "description": "O FCP (First Contentful Paint) foi lento, o que pode afetar a experiência do usuário.",
+        "possibleCause": "Problemas de otimização de recursos ou código da aplicação.",
+        "howToReproduce": "1. Acesse a página https://dev.notasfacil.com/. 2. Verifique o tempo de carregamento da página.",
+        "suggestion": "Otimizar recursos e código da aplicação para melhorar a performance.",
+        "affectedUrl": "https://dev.notasfacil.com/"
+      }
+    ],
+    "recommendations": [
+      "Verificar e corrigir todos os links quebrados para garantir a funcionalidade da aplicação.",
+      "Implementar texto alternativo para todas as imagens para melhorar a acessibilidade.",
+      "Otimizar a performance da aplicação para melhorar a experiência do usuário."
+    ],
+    "generatedAt": "2026-06-28T20:19:32.672Z",
+    "model": "llama-3.3-70b-versatile"
+  },
+  "finishedAt": "2026-06-28T20:19:32.672Z"
+}
