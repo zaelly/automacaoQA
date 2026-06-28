@@ -209,6 +209,10 @@ export interface TestSummary {
   sessionId: string;
   goal: string;
   baseUrl: string;
+  // Intent
+  intent?: string;
+  intentName?: string;
+  intentSteps?: string[];
   // Summary stats (for quick display)
   totalChecks: number;
   passed: number;
@@ -258,6 +262,8 @@ export interface QaSession {
   testSummary?: TestSummary;
   report?: AnalysisReport;
   videoPath?: string;
+  intent?: string;
+  intentName?: string;
   startedAt: string;
   finishedAt?: string;
   error?: string;

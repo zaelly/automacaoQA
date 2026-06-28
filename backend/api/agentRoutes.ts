@@ -18,6 +18,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { TestRunner } from '../agent/TestRunner';
 import { GroqClient } from '../llm/GroqClient';
+import { IntentDetector } from '../llm/IntentDetector';
+import { INTENTS } from '../agent/intents';
 import { QaSessionStorage } from '../storage/QaSessionStorage';
 import type { BroadcastEvent, QaSession } from '../agent/types';
 
@@ -30,12 +32,33 @@ const activeSessions = new Map<string, QaSession>();
 export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): Router {
   const router = Router();
 
+  // ── POST /detect-intent ─────────────────────────────────────────────────────
+  router.post('/detect-intent', async (req: Request, res: Response) => {
+    const { goal } = req.body as { goal?: string };
+    if (!goal) return res.status(400).json({ error: 'goal é obrigatório' });
+
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return res.json({ intent: 'exploratorio', confidence: 'low', needsClarification: false, intentData: INTENTS.exploratorio });
+    }
+
+    try {
+      const detector = new IntentDetector(apiKey);
+      const result   = await detector.detect(goal);
+      const intentData = result.intent !== 'unknown' ? INTENTS[result.intent as keyof typeof INTENTS] : null;
+      return res.json({ ...result, intentData, allIntents: Object.values(INTENTS).map(i => ({ id: i.id, name: i.name, emoji: i.emoji, description: i.description })) });
+    } catch {
+      return res.json({ intent: 'exploratorio', confidence: 'low', needsClarification: false, intentData: INTENTS.exploratorio });
+    }
+  });
+
   // ── POST /sessions ──────────────────────────────────────────────────────────
   router.post('/sessions', async (req: Request, res: Response) => {
-    const { goal, baseUrl, credentials } = req.body as {
+    const { goal, baseUrl, credentials, intent } = req.body as {
       goal: string;
       baseUrl: string;
       credentials?: { username?: string; password?: string };
+      intent?: string;
     };
 
     if (!goal || !baseUrl) {
@@ -49,11 +72,14 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
 
     const sessionId = uuidv4();
 
+    const intentDef = intent ? INTENTS[intent as keyof typeof INTENTS] : undefined;
     const session: QaSession = {
       id: sessionId,
       goal,
       baseUrl,
       status: 'running',
+      intent:      intentDef?.id,
+      intentName:  intentDef?.name,
       startedAt: new Date().toISOString(),
     };
 
@@ -61,7 +87,7 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
     broadcast({ type: 'session_started', sessionId, payload: { goal, baseUrl } });
 
     // Run in background
-    runSession(session, apiKey, broadcast, credentials).catch(err => {
+    runSession(session, apiKey, broadcast, credentials, intent).catch(err => {
       console.error(`[AgentRoute] Session ${sessionId} fatal:`, err.message);
     });
 
@@ -121,13 +147,14 @@ async function runSession(
   groqApiKey: string,
   broadcast: (event: BroadcastEvent) => void,
   credentials?: { username?: string; password?: string },
+  intent?: string,
 ): Promise<void> {
   const { id: sessionId, goal, baseUrl } = session;
 
   try {
     // ── Phase 1: Playwright audit ─────────────────────────────────────────────
     const runner = new TestRunner(sessionId, WORKSPACE, broadcast);
-    const summary = await runner.run(goal, baseUrl, credentials);
+    const summary = await runner.run(goal, baseUrl, credentials, intent);
 
     session.testSummary = summary;
 

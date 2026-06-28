@@ -24,6 +24,8 @@ import type {
   TestSummary, TestFlow, TimelineEvent, BrokenLink,
   NetworkErrorDetail, TestCheck, BroadcastEvent, PerformanceMetrics,
 } from './types';
+import { getIntent } from './intents';
+import type { IntentDefinition } from './intents';
 
 export interface TestCredentials {
   username?: string;
@@ -57,13 +59,18 @@ export class TestRunner {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
-  async run(goal: string, baseUrl: string, credentials?: TestCredentials): Promise<TestSummary> {
+  async run(goal: string, baseUrl: string, credentials?: TestCredentials, intentId?: string): Promise<TestSummary> {
     this.baseUrl = baseUrl;
     const startedAt  = new Date().toISOString();
     const workspace  = path.join(this.workspaceRoot, this.sessionId);
     fs.mkdirSync(workspace, { recursive: true });
 
-    this.emit('phase_change', { phase: 'testing', label: 'Executando testes...' });
+    const intentDef: IntentDefinition | undefined = intentId ? getIntent(intentId) : undefined;
+    if (intentDef) {
+      this.emit('phase_change', { phase: 'testing', label: `Executando: ${intentDef.emoji} ${intentDef.name}` });
+    } else {
+      this.emit('phase_change', { phase: 'testing', label: 'Executando testes...' });
+    }
 
     const videoEnabled = true;
     await this.browser.launch(
@@ -96,13 +103,22 @@ export class TestRunner {
         await this.runLoginFlow(page, credentials);
       }
 
-      // ── 4. Content flows (skipped if login failed) ─────────────────────
+      // ── 4. Intent-specific tests (after login) ────────────────────────────
       if (this.loginStatus !== 'fail') {
-        await this.runElementInventory(page);
-        await this.runFormTests(page);
-        await this.runLinkChecks(page);
+        if (intentDef && intentDef.id !== 'exploratorio') {
+          await this.runIntentFlow(page, baseUrl, intentDef);
+        } else {
+          // Generic exploration
+          await this.runElementInventory(page);
+          await this.runFormTests(page);
+          await this.runLinkChecks(page);
+        }
       } else {
+        const skippedName = intentDef ? intentDef.name : 'Testes de Conteúdo';
         SKIPPED_FLOWS.forEach(name => this.addSkippedFlow(name, 'Login não concluído', 'Login'));
+        if (intentDef && intentDef.id !== 'login') {
+          this.addSkippedFlow(skippedName, 'Requer login bem-sucedido', 'Login');
+        }
       }
 
       // ── 5. Always-run: accessibility + performance ────────────────────────
@@ -147,6 +163,9 @@ export class TestRunner {
       sessionId: this.sessionId,
       goal,
       baseUrl,
+      intent:       intentDef?.id,
+      intentName:   intentDef?.name,
+      intentSteps:  intentDef?.steps,
       timeline: this.timeline,
       flows: Array.from(this.flows.values()),
       brokenLinks: this.brokenLinks,
@@ -464,6 +483,54 @@ export class TestRunner {
 
       flow.status = broken > 0 ? 'fail' : 'pass';
     } catch { flow.status = 'pass'; }
+  }
+
+  // ─── Intent-specific flow ────────────────────────────────────────────────────
+
+  private async runIntentFlow(page: Page, baseUrl: string, intent: IntentDefinition): Promise<void> {
+    const origin = new URL(baseUrl).origin;
+    const flow = this.startFlow(intent.name, page.url());
+    this.flowEvent(flow, 'info', `${intent.emoji} Intenção: ${intent.name}`, intent.description);
+
+    // Try to navigate to known paths for this intent
+    let intentUrl: string | null = null;
+    for (const tryPath of intent.paths) {
+      const testUrl = `${origin}${tryPath}`;
+      try {
+        const res = await fetch(testUrl, { method: 'HEAD', signal: AbortSignal.timeout(4000) });
+        if (res.status < 400) { intentUrl = testUrl; break; }
+      } catch { /* try next */ }
+    }
+
+    if (intentUrl && intentUrl !== page.url() && intentUrl !== `${page.url()}/`) {
+      await page.goto(intentUrl, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {});
+      const ss = await this.snap(`${intent.id}-page`);
+      this.flowEvent(flow, 'navigate', `Navegou para ${intentUrl}`, undefined, ss);
+      flow.url = intentUrl;
+    } else if (!intentUrl) {
+      this.flowEvent(flow, 'info', `Testando na página atual — nenhuma URL específica encontrada para ${intent.name}`);
+    }
+
+    // Check DOM indicators
+    let found = 0;
+    for (const sel of intent.selectors) {
+      const exists = await page.$(sel) !== null;
+      if (exists) {
+        found++;
+        this.flowEvent(flow, 'found', `Elemento de ${intent.name} detectado`, sel);
+      }
+    }
+    if (intent.selectors.length > 0 && found === 0) {
+      this.flowEvent(flow, 'warning', `Nenhum elemento específico de ${intent.name} detectado na página`);
+    }
+
+    // Run generic checks on this intent page
+    await this.runElementInventory(page);
+    await this.runLinkChecks(page);
+
+    const ss = await this.snap(`${intent.id}-final`);
+    flow.screenshots.push(...[ss].filter(Boolean) as string[]);
+    flow.status = flow.events.some(e => e.type === 'error') ? 'fail' : 'pass';
   }
 
   // ─── 5. Accessibility ─────────────────────────────────────────────────────────

@@ -23,7 +23,14 @@ const FLOW_STATUS_COLOR = { pass:'#22c55e', fail:'#ef4444', skipped:'#64748b' }
 
 function ssUrl(sessionId, rel) {
   if (!rel) return null
-  return `${AGENT_FILES}/${sessionId}/${rel}`
+  // Handle absolute paths stored by older sessions
+  let r = rel.replace(/\\/g, '/')
+  if (r.includes('agent-workspace')) {
+    const marker = `agent-workspace/${sessionId}/`
+    const idx = r.indexOf(marker)
+    r = idx >= 0 ? r.slice(idx + marker.length) : r.split('/').pop()
+  }
+  return `${AGENT_FILES}/${sessionId}/${r}`
 }
 
 // ─── Shared small helpers ─────────────────────────────────────────────────────
@@ -295,7 +302,13 @@ function AgentFlowCard({ flow, sessionId }) {
               {flow.screenshots.map((ss,i) => {
                 const url = ssUrl(sessionId, ss)
                 if (!url) return null
-                return <a key={i} href={url} target="_blank" rel="noreferrer"><span style={{ fontSize:11, color:'#7c3aed', textDecoration:'underline' }}>📸 Screenshot {i+1}</span></a>
+                return (
+                  <a key={i} href={url} target="_blank" rel="noreferrer" style={{ display:'block', flexShrink:0 }}>
+                    <img src={url} alt={`Screenshot ${i+1}`}
+                      onError={e => { e.currentTarget.style.display='none' }}
+                      style={{ width:120, height:78, objectFit:'cover', borderRadius:6, border:'1px solid rgba(124,58,237,0.3)', cursor:'pointer', display:'block' }} />
+                  </a>
+                )
               })}
             </div>
           )}
@@ -450,17 +463,30 @@ function AgentReportDetail({ session, onClose }) {
             <div>
               {!ts?.timeline?.length
                 ? <div style={{ color:'#64748b', fontSize:13 }}>Nenhum evento.</div>
-                : ts.timeline.map((ev,i) => (
-                    <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8, padding:'5px 0', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-                      <span style={{ fontSize:12, flexShrink:0, width:16 }}>{TIMELINE_ICON[ev.type]||'•'}</span>
-                      <span style={{ fontSize:10, color:'#475569', flexShrink:0, width:58, fontFamily:'monospace' }}>{new Date(ev.timestamp).toLocaleTimeString('pt-BR')}</span>
-                      <span style={{ fontSize:11, color:'#475569', flexShrink:0, width:80, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>[{ev.flowName}]</span>
-                      <div style={{ flex:1 }}>
-                        <span style={{ fontSize:12, color:TIMELINE_COLOR[ev.type]||'#e2e8f0' }}>{ev.description}</span>
-                        {ev.detail && <span style={{ fontSize:10, color:'#64748b', marginLeft:5 }}>— {ev.detail}</span>}
+                : ts.timeline.map((ev,i) => {
+                    const thumbUrl = ev.screenshotPath ? ssUrl(session.id, ev.screenshotPath) : null
+                    return (
+                      <div key={i} style={{ padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                          <span style={{ fontSize:12, flexShrink:0, width:16 }}>{TIMELINE_ICON[ev.type]||'•'}</span>
+                          <span style={{ fontSize:10, color:'#475569', flexShrink:0, width:58, fontFamily:'monospace' }}>{new Date(ev.timestamp).toLocaleTimeString('pt-BR')}</span>
+                          <span style={{ fontSize:11, color:'#475569', flexShrink:0, width:80, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>[{ev.flowName}]</span>
+                          <div style={{ flex:1 }}>
+                            <span style={{ fontSize:12, color:TIMELINE_COLOR[ev.type]||'#e2e8f0' }}>{ev.description}</span>
+                            {ev.detail && <span style={{ fontSize:10, color:'#64748b', marginLeft:5 }}>— {ev.detail}</span>}
+                          </div>
+                        </div>
+                        {thumbUrl && (
+                          <div style={{ marginTop:5, marginLeft:82 }}>
+                            <a href={thumbUrl} target="_blank" rel="noreferrer">
+                              <img src={thumbUrl} alt="screenshot" onError={e=>{ e.currentTarget.style.display='none' }}
+                                style={{ width:140, height:90, objectFit:'cover', borderRadius:6, border:'1px solid rgba(124,58,237,0.25)', cursor:'pointer', display:'block' }} />
+                            </a>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
               }
             </div>
           )}
@@ -523,13 +549,22 @@ function AgentReportDetail({ session, onClose }) {
         </div>
 
         {/* Video */}
-        {ts?.videoPath && (
-          <div style={{ marginTop:10, textAlign:'center' }}>
-            <a href={ssUrl(session.id, ts.videoPath)||'#'} target="_blank" rel="noreferrer" style={{ color:'#7c3aed', fontSize:12, textDecoration:'underline' }}>
-              📹 Assistir vídeo da execução
-            </a>
-          </div>
-        )}
+        {ts?.videoPath && (() => {
+          const videoUrl = ssUrl(session.id, ts.videoPath)
+          if (!videoUrl) return null
+          return (
+            <div style={{ marginTop:14 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'#64748b', marginBottom:8 }}>📹 VÍDEO DA EXECUÇÃO</div>
+              <video controls src={videoUrl} style={{ width:'100%', borderRadius:8, border:'1px solid rgba(124,58,237,0.2)', background:'#000', maxHeight:300 }}>
+                <track kind="captions" />
+                Seu navegador não suporta reprodução de vídeo.
+              </video>
+              <a href={videoUrl} target="_blank" rel="noreferrer" style={{ display:'block', marginTop:6, fontSize:11, color:'#7c3aed', textDecoration:'underline', textAlign:'center' }}>
+                Abrir em tela cheia
+              </a>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
@@ -813,6 +848,7 @@ export default function Relatorios() {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                       <span style={{ fontSize:10, fontWeight:700, padding:'1px 7px', borderRadius:10, background:'rgba(124,58,237,0.2)', color:'#a78bfa', flexShrink:0 }}>AGENTE IA</span>
+                      {s.intentName && <span style={{ fontSize:10, fontWeight:700, padding:'1px 7px', borderRadius:10, background:'rgba(59,130,246,0.12)', color:'#60a5fa', flexShrink:0 }}>{s.intentName}</span>}
                       <span style={{ fontSize:14, fontWeight:700, color:'var(--bright)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.goal}</span>
                     </div>
                     <p style={{ fontSize:12, color:'var(--faint)' }}>
