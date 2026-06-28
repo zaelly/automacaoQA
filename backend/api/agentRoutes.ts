@@ -46,7 +46,11 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
       const detector = new IntentDetector(apiKey);
       const result   = await detector.detect(goal);
       const intentData = result.intent !== 'unknown' ? INTENTS[result.intent as keyof typeof INTENTS] : null;
-      return res.json({ ...result, intentData, allIntents: Object.values(INTENTS).map(i => ({ id: i.id, name: i.name, emoji: i.emoji, description: i.description })) });
+      return res.json({
+        ...result,
+        intentData,
+        allIntents: Object.values(INTENTS).map(i => ({ id: i.id, name: i.name, emoji: i.emoji, description: i.description })),
+      });
     } catch {
       return res.json({ intent: 'exploratorio', confidence: 'low', needsClarification: false, intentData: INTENTS.exploratorio });
     }
@@ -54,11 +58,12 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
 
   // ── POST /sessions ──────────────────────────────────────────────────────────
   router.post('/sessions', async (req: Request, res: Response) => {
-    const { goal, baseUrl, credentials, intent } = req.body as {
+    const { goal, baseUrl, credentials, intent, customSteps } = req.body as {
       goal: string;
       baseUrl: string;
       credentials?: { username?: string; password?: string };
       intent?: string;
+      customSteps?: string[];
     };
 
     if (!goal || !baseUrl) {
@@ -80,6 +85,7 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
       status: 'running',
       intent:      intentDef?.id,
       intentName:  intentDef?.name,
+      customSteps: customSteps?.length ? customSteps : undefined,
       startedAt: new Date().toISOString(),
     };
 
@@ -87,7 +93,7 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
     broadcast({ type: 'session_started', sessionId, payload: { goal, baseUrl } });
 
     // Run in background
-    runSession(session, apiKey, broadcast, credentials, intent).catch(err => {
+    runSession(session, apiKey, broadcast, credentials, intent, customSteps).catch(err => {
       console.error(`[AgentRoute] Session ${sessionId} fatal:`, err.message);
     });
 
@@ -148,13 +154,14 @@ async function runSession(
   broadcast: (event: BroadcastEvent) => void,
   credentials?: { username?: string; password?: string },
   intent?: string,
+  customSteps?: string[],
 ): Promise<void> {
   const { id: sessionId, goal, baseUrl } = session;
 
   try {
     // ── Phase 1: Playwright audit ─────────────────────────────────────────────
     const runner = new TestRunner(sessionId, WORKSPACE, broadcast);
-    const summary = await runner.run(goal, baseUrl, credentials, intent);
+    const summary = await runner.run(goal, baseUrl, credentials, intent, customSteps);
 
     session.testSummary = summary;
 

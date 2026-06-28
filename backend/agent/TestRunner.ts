@@ -59,7 +59,7 @@ export class TestRunner {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
-  async run(goal: string, baseUrl: string, credentials?: TestCredentials, intentId?: string): Promise<TestSummary> {
+  async run(goal: string, baseUrl: string, credentials?: TestCredentials, intentId?: string, customSteps?: string[]): Promise<TestSummary> {
     this.baseUrl = baseUrl;
     const startedAt  = new Date().toISOString();
     const workspace  = path.join(this.workspaceRoot, this.sessionId);
@@ -103,7 +103,12 @@ export class TestRunner {
         await this.runLoginFlow(page, credentials);
       }
 
-      // ── 4. Intent-specific tests (after login) ────────────────────────────
+      // ── 4. Custom user instructions (after login, before intent flow) ────────
+      if (this.loginStatus !== 'fail' && customSteps && customSteps.length > 0) {
+        await this.runCustomSteps(page, customSteps);
+      }
+
+      // ── 5. Intent-specific tests (after login) ────────────────────────────
       if (this.loginStatus !== 'fail') {
         if (intentDef && intentDef.id !== 'exploratorio') {
           await this.runIntentFlow(page, baseUrl, intentDef);
@@ -166,6 +171,7 @@ export class TestRunner {
       intent:       intentDef?.id,
       intentName:   intentDef?.name,
       intentSteps:  intentDef?.steps,
+      customSteps:  customSteps?.length ? customSteps : undefined,
       timeline: this.timeline,
       flows: Array.from(this.flows.values()),
       brokenLinks: this.brokenLinks,
@@ -575,6 +581,131 @@ export class TestRunner {
       }
     }
     return '';
+  }
+
+  // ─── Custom user instructions ────────────────────────────────────────────────
+
+  private async runCustomSteps(page: Page, steps: string[]): Promise<void> {
+    const flow = this.startFlow('Instruções Personalizadas', page.url());
+    this.flowEvent(flow, 'info', `Executando ${steps.length} instrução(ões) personalizada(s) do usuário`);
+
+    for (let i = 0; i < steps.length; i++) {
+      const instruction = steps[i];
+      const ssBefore = await this.snap(`custom-${i + 1}-before`);
+      this.flowEvent(flow, 'info', `▶ ${instruction}`, undefined, ssBefore);
+
+      try {
+        const result = await this.executeCustomInstruction(page, instruction);
+        const ssAfter = await this.snap(`custom-${i + 1}-after`);
+        if (result.success) {
+          this.flowEvent(flow, 'success', `✓ ${instruction}`, result.detail, ssAfter);
+          this.check(`Instrução: ${instruction.slice(0, 60)}`, 'pass', result.detail);
+        } else {
+          this.flowEvent(flow, 'warning', `Instrução não executada: ${instruction}`, result.detail, ssAfter);
+          this.check(`Instrução: ${instruction.slice(0, 60)}`, 'warning', result.detail);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.flowEvent(flow, 'error', `Falha ao executar: ${instruction}`, msg);
+        this.check(`Instrução: ${instruction.slice(0, 60)}`, 'fail', msg);
+      }
+    }
+
+    flow.status = flow.events.some(e => e.type === 'error') ? 'fail' : 'pass';
+  }
+
+  private async executeCustomInstruction(page: Page, instruction: string): Promise<{ success: boolean; detail: string }> {
+    const norm = instruction.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+    // === CLOSE MODAL / X BUTTON ===
+    const isClose = norm.includes('fechar') || norm.includes('feche') || norm.includes('fecha') ||
+      /clicar? (no|em|o) x\b/.test(norm) || norm.includes('botao x') ||
+      norm.includes('modal') || norm.includes('popup') || norm.includes('overlay');
+
+    if (isClose) {
+      const closeSelectors = [
+        '[aria-label*="close" i]', '[aria-label*="fechar" i]',
+        '.modal-close', '.close-btn', '[data-dismiss="modal"]',
+        'button.close', '.popup-close', '[class*="modal__close"]',
+        '[class*="close-button"]', '[class*="closeButton"]',
+        '.swal2-close', '[class*="btn-close"]',
+      ];
+      for (const sel of closeSelectors) {
+        try {
+          const el = await page.$(sel);
+          if (el && await el.isVisible()) {
+            await el.click({ timeout: 5000 });
+            await page.waitForTimeout(700);
+            return { success: true, detail: `Clicou no seletor: ${sel}` };
+          }
+        } catch { /* try next */ }
+      }
+      // Try X / close by visible text
+      for (const text of ['×', '✕', '✗', 'X', 'Fechar', 'Close']) {
+        try {
+          const btn = page.getByRole('button', { name: text, exact: true });
+          if (await btn.isVisible({ timeout: 1500 })) {
+            await btn.click({ timeout: 3000 });
+            await page.waitForTimeout(700);
+            return { success: true, detail: `Clicou no botão "${text}"` };
+          }
+        } catch { /* try next */ }
+      }
+      return { success: false, detail: 'Nenhum botão de fechar encontrado na página' };
+    }
+
+    // === NAVIGATE ===
+    const navMatch = norm.match(/(?:ir para|navegar para|acessar|abrir|va para|va a)\s+(.+)/);
+    if (navMatch) {
+      const raw = instruction.match(/(?:ir para|navegar para|acessar|abrir|va para|va a)\s+(.+)/i)?.[1]?.trim() || '';
+      const urlInLine = raw.match(/https?:\/\/\S+/);
+      const pathInLine = raw.match(/\/[\w/-]*/);
+      if (urlInLine) {
+        await page.goto(urlInLine[0], { waitUntil: 'domcontentloaded', timeout: 15000 });
+        return { success: true, detail: `Navegou para ${urlInLine[0]}` };
+      } else if (pathInLine) {
+        const url = new URL(pathInLine[0], this.baseUrl).href;
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        return { success: true, detail: `Navegou para ${url}` };
+      }
+    }
+
+    // === CLICK BY TEXT / BUTTON ===
+    const clickMatch = instruction.match(/(?:clique?|clica|pressione?)\s+(?:no|em|na|o|a|no botão|no link|no elemento|no campo)\s+[""']?(.+?)[""']?\s*$/i);
+    if (clickMatch) {
+      const target = clickMatch[1].trim();
+      try {
+        const btn = page.getByRole('button', { name: new RegExp(target, 'i') });
+        if (await btn.first().isVisible({ timeout: 2000 })) {
+          await btn.first().click({ timeout: 5000 });
+          await page.waitForTimeout(500);
+          return { success: true, detail: `Clicou no botão "${target}"` };
+        }
+      } catch { /* try text */ }
+      try {
+        const el = page.getByText(target, { exact: false });
+        if (await el.first().isVisible({ timeout: 2000 })) {
+          await el.first().click({ timeout: 5000 });
+          await page.waitForTimeout(500);
+          return { success: true, detail: `Clicou no elemento com texto "${target}"` };
+        }
+      } catch { /* failed */ }
+      return { success: false, detail: `Elemento "${target}" não encontrado na página` };
+    }
+
+    // === WAIT ===
+    const waitMsMatch  = norm.match(/(?:espere?r?|aguarde?r?)\s+(\d+)\s*ms/);
+    const waitSecMatch = norm.match(/(?:espere?r?|aguarde?r?)\s+(\d+)\s*(?:s\b|segundo)/);
+    if (waitMsMatch) {
+      await page.waitForTimeout(parseInt(waitMsMatch[1]));
+      return { success: true, detail: `Aguardou ${waitMsMatch[1]}ms` };
+    }
+    if (waitSecMatch) {
+      await page.waitForTimeout(parseInt(waitSecMatch[1]) * 1000);
+      return { success: true, detail: `Aguardou ${waitSecMatch[1]} segundo(s)` };
+    }
+
+    return { success: false, detail: 'Instrução não reconhecida pelo executor automático (sem ação tomada)' };
   }
 
   private async detectSuccessMessage(page: Page): Promise<boolean> {

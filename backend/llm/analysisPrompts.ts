@@ -50,6 +50,16 @@ export function buildAnalysisPrompt(summary: TestSummary): string {
   lines.push(`URL testada: ${summary.baseUrl}`);
   lines.push(`Data: ${new Date(summary.startedAt).toLocaleString('pt-BR')}`);
   lines.push(`Duração total: ${Math.round(summary.durationMs / 1000)}s`);
+  if (summary.intentName) {
+    lines.push(`Intenção testada: ${summary.intentName}`);
+  }
+  if (summary.customSteps && summary.customSteps.length > 0) {
+    lines.push('');
+    lines.push('## Instruções Personalizadas do Usuário');
+    lines.push('O usuário especificou estas ações adicionais (que foram executadas automaticamente):');
+    summary.customSteps.forEach((s, i) => lines.push(`${i + 1}. ${s}`));
+    lines.push('Avalie se essas instruções foram cumpridas com base nos fluxos e erros reportados.');
+  }
   lines.push('');
 
   // ── Login status ──────────────────────────────────────────────────────────

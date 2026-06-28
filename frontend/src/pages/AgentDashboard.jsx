@@ -91,17 +91,38 @@ function IntentPicker({ allIntents, selected, onSelect }) {
 }
 
 // ── Intent steps preview ──────────────────────────────────────────────────────
-function IntentSteps({ intent }) {
+function IntentSteps({ intent, customSteps = [] }) {
   if (!intent?.steps) return null
+  const totalSteps = intent.steps.length + customSteps.length
   return (
     <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, padding: '12px 14px' }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginBottom: 8 }}>PLANO DE EXECUÇÃO — {intent.emoji} {intent.name}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginBottom: 8 }}>
+        PLANO DE EXECUÇÃO — {intent.emoji} {intent.name}
+        {customSteps.length > 0 && (
+          <span style={{ marginLeft: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: 10 }}>
+            + {customSteps.length} instrução(ões) personalizada(s)
+          </span>
+        )}
+      </div>
       {intent.steps.map((step, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0' }}>
+        <div key={`lib-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0' }}>
           <span style={{ fontSize: 11, color: '#475569', fontFamily: 'monospace', flexShrink: 0, width: 18 }}>{String(i+1).padStart(2,'0')}.</span>
           <span style={{ fontSize: 12, color: '#94a3b8' }}>{step}</span>
         </div>
       ))}
+      {customSteps.length > 0 && (
+        <>
+          <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', margin: '8px 0 6px' }} />
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>INSTRUÇÕES PERSONALIZADAS</div>
+          {customSteps.map((step, i) => (
+            <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0' }}>
+              <span style={{ fontSize: 11, color: '#92400e', fontFamily: 'monospace', flexShrink: 0, width: 18 }}>{String(intent.steps.length + i + 1).padStart(2,'0')}.</span>
+              <span style={{ fontSize: 12, color: '#fbbf24', fontStyle: 'italic' }}>⚡ {step}</span>
+            </div>
+          ))}
+        </>
+      )}
+      <div style={{ marginTop: 8, fontSize: 11, color: '#475569' }}>{totalSteps} passos no total</div>
     </div>
   )
 }
@@ -118,6 +139,7 @@ export default function AgentDashboard() {
   const [detectedIntent, setDetectedIntent]  = useState(null)
   const [selectedIntent, setSelectedIntent]  = useState(null)
   const [allIntents, setAllIntents]          = useState([])
+  const [customSteps, setCustomSteps]        = useState([])
 
   const [logs, setLogs]             = useState([])
   const [lastSessionId, setLastSessionId] = useState(null)
@@ -164,6 +186,9 @@ export default function AgentDashboard() {
       const data = await apiPost('/agent/detect-intent', { goal: goal.trim() })
       if (data.allIntents) setAllIntents(data.allIntents)
 
+      const steps = Array.isArray(data.customSteps) ? data.customSteps : []
+      setCustomSteps(steps)
+
       if (data.needsClarification || data.intent === 'unknown') {
         addLog('→ Objetivo amplo — selecione o foco do teste')
         setStage('clarify')
@@ -171,6 +196,10 @@ export default function AgentDashboard() {
         setDetectedIntent(data.intentData)
         setSelectedIntent(data.intentData)
         addLog(`→ Intenção detectada: ${data.intentData?.emoji} ${data.intentData?.name} (confiança: ${data.confidence})`)
+        if (steps.length > 0) {
+          addLog(`→ ${steps.length} instrução(ões) personalizada(s) extraída(s) do objetivo`)
+          steps.forEach(s => addLog(`  ⚡ ${s}`))
+        }
         setStage('confirm')
       }
     } catch {
@@ -194,6 +223,7 @@ export default function AgentDashboard() {
       goal: goal.trim(),
       baseUrl: baseUrl.trim(),
       intent: intentToUse?.id,
+      ...(customSteps.length > 0 ? { customSteps } : {}),
       ...(username || password
         ? { credentials: { username: username.trim() || undefined, password: password || undefined } }
         : {}),
@@ -219,6 +249,7 @@ export default function AgentDashboard() {
     setStage('form')
     setDetectedIntent(null)
     setSelectedIntent(null)
+    setCustomSteps([])
     setLogs([])
     setLastSessionId(null)
     activeId.current = null
@@ -324,7 +355,7 @@ export default function AgentDashboard() {
           </div>
 
           {/* Steps preview */}
-          <IntentSteps intent={selectedIntent} />
+          <IntentSteps intent={selectedIntent} customSteps={customSteps} />
 
           <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
             <button onClick={() => setStage('form')} style={{ padding: '10px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 13 }}>
