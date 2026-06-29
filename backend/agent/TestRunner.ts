@@ -23,9 +23,13 @@ import { ScreenshotManager }    from '../tools/ScreenshotManager';
 import type {
   TestSummary, TestFlow, TimelineEvent, BrokenLink,
   NetworkErrorDetail, TestCheck, BroadcastEvent, PerformanceMetrics,
+  ExecutionContract,
 } from './types';
 import { getIntent } from './intents';
 import type { IntentDefinition } from './intents';
+import { isAllowedCategory } from './contracts';
+import { WorkflowRunner } from './WorkflowRunner';
+import { getWorkflowWithCustomSteps } from './WorkflowDefinitions';
 
 export interface TestCredentials {
   username?: string;
@@ -50,6 +54,11 @@ export class TestRunner {
   private loginError?: string;
   private screenshotCounter = 0;
   private baseUrl = '';
+  private contract?: ExecutionContract;
+
+  private allowed(category: string): boolean {
+    return isAllowedCategory(this.contract, category);
+  }
 
   constructor(
     private sessionId: string,
@@ -59,8 +68,9 @@ export class TestRunner {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
-  async run(goal: string, baseUrl: string, credentials?: TestCredentials, intentId?: string, customSteps?: string[]): Promise<TestSummary> {
+  async run(goal: string, baseUrl: string, credentials?: TestCredentials, intentId?: string, customSteps?: string[], contract?: ExecutionContract): Promise<TestSummary> {
     this.baseUrl = baseUrl;
+    this.contract = contract;
     const startedAt  = new Date().toISOString();
     const workspace  = path.join(this.workspaceRoot, this.sessionId);
     fs.mkdirSync(workspace, { recursive: true });
@@ -94,8 +104,12 @@ export class TestRunner {
       // ── 1. Navigate ───────────────────────────────────────────────────────
       await this.navigate(page, baseUrl);
 
-      // ── 2. SEO & metadata ─────────────────────────────────────────────────
-      await this.runSeoChecks(page);
+      // ── 2. SEO & metadata (skipped for module/flow modes) ────────────────
+      if (this.allowed('seo')) {
+        await this.runSeoChecks(page);
+      } else {
+        this.addSkippedFlow('SEO & Metadados', 'Fora do escopo desta auditoria', 'Contrato');
+      }
 
       // ── 3. Login flow ─────────────────────────────────────────────────────
       const hasLogin = await this.detectLoginForm(page);
@@ -112,11 +126,17 @@ export class TestRunner {
       if (this.loginStatus !== 'fail') {
         if (intentDef && intentDef.id !== 'exploratorio') {
           await this.runIntentFlow(page, baseUrl, intentDef);
+          // Links check for module/global mode (not flow mode)
+          if (this.allowed('links')) {
+            await this.runLinkChecks(page);
+          }
         } else {
-          // Generic exploration
+          // Generic exploration — links only if allowed
           await this.runElementInventory(page);
           await this.runFormTests(page);
-          await this.runLinkChecks(page);
+          if (this.allowed('links')) {
+            await this.runLinkChecks(page);
+          }
         }
       } else {
         const skippedName = intentDef ? intentDef.name : 'Testes de Conteúdo';
@@ -126,8 +146,13 @@ export class TestRunner {
         }
       }
 
-      // ── 5. Always-run: accessibility + performance ────────────────────────
-      await this.runAccessibilityChecks(page);
+      // ── 6. Accessibility (skipped for module/flow modes) ──────────────────
+      if (this.allowed('accessibility')) {
+        await this.runAccessibilityChecks(page);
+      } else {
+        this.addSkippedFlow('Acessibilidade', 'Fora do escopo desta auditoria', 'Contrato');
+      }
+
       perf = await this.perfCollector.collect();
 
     } catch (err: unknown) {
@@ -168,8 +193,9 @@ export class TestRunner {
       sessionId: this.sessionId,
       goal,
       baseUrl,
-      intent:       intentDef?.id,
-      intentName:   intentDef?.name,
+      contract,
+      intent:       contract?.intent ?? intentDef?.id,
+      intentName:   contract?.intentName ?? intentDef?.name,
       intentSteps:  intentDef?.steps,
       customSteps:  customSteps?.length ? customSteps : undefined,
       timeline: this.timeline,
@@ -494,49 +520,59 @@ export class TestRunner {
   // ─── Intent-specific flow ────────────────────────────────────────────────────
 
   private async runIntentFlow(page: Page, baseUrl: string, intent: IntentDefinition): Promise<void> {
-    const origin = new URL(baseUrl).origin;
     const flow = this.startFlow(intent.name, page.url());
-    this.flowEvent(flow, 'info', `${intent.emoji} Intenção: ${intent.name}`, intent.description);
+    this.flowEvent(flow, 'info', `${intent.emoji} Iniciando workflow estruturado: ${intent.name}`, intent.description);
 
-    // Try to navigate to known paths for this intent
-    let intentUrl: string | null = null;
-    for (const tryPath of intent.paths) {
-      const testUrl = `${origin}${tryPath}`;
-      try {
-        const res = await fetch(testUrl, { method: 'HEAD', signal: AbortSignal.timeout(4000) });
-        if (res.status < 400) { intentUrl = testUrl; break; }
-      } catch { /* try next */ }
-    }
+    // Build workflow from registry, injecting any custom steps from the contract
+    const customSteps = this.contract?.customSteps ?? [];
+    const workflow = getWorkflowWithCustomSteps(intent.id, customSteps);
 
-    if (intentUrl && intentUrl !== page.url() && intentUrl !== `${page.url()}/`) {
-      await page.goto(intentUrl, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {});
-      const ss = await this.snap(`${intent.id}-page`);
-      this.flowEvent(flow, 'navigate', `Navegou para ${intentUrl}`, undefined, ss);
-      flow.url = intentUrl;
-    } else if (!intentUrl) {
-      this.flowEvent(flow, 'info', `Testando na página atual — nenhuma URL específica encontrada para ${intent.name}`);
-    }
+    // WorkflowRunner broadcasts step events; wire them into this flow's timeline
+    const broadcast: Parameters<WorkflowRunner['execute']>[3] = (event) => {
+      const type = event.type;
+      const p = event.payload;
 
-    // Check DOM indicators
-    let found = 0;
-    for (const sel of intent.selectors) {
-      const exists = await page.$(sel) !== null;
-      if (exists) {
-        found++;
-        this.flowEvent(flow, 'found', `Elemento de ${intent.name} detectado`, sel);
+      if (type === 'phase_start') {
+        this.flowEvent(flow, 'info', `▶ Fase: ${String(p['name'])}`, undefined);
+      } else if (type === 'step_start') {
+        this.flowEvent(flow, 'info', `  → ${String(p['description'])}`, String(p['action']));
+      } else if (type === 'step_complete') {
+        const status = String(p['status']);
+        if (status === 'passed') {
+          this.flowEvent(flow, 'success', `  ✔ ${String(p['detail'])} (${String(p['duration'])}ms)`);
+          this.check(`[${intent.id}] ${String(p['description'])}`, 'pass', String(p['detail']));
+        } else if (status === 'failed') {
+          this.flowEvent(flow, 'error', `  ✖ ${String(p['detail'])}`);
+          this.check(`[${intent.id}] ${String(p['description'])}`, 'fail', String(p['detail']));
+        } else {
+          // skipped
+          this.flowEvent(flow, 'info', `  ~ Pulado: ${String(p['detail'])}`);
+          this.check(`[${intent.id}] ${String(p['description'])}`, 'warning', 'Pulado');
+        }
+      } else if (type === 'phase_aborted') {
+        this.flowEvent(flow, 'error', `  ✖ Fase abortada: ${String(p['reason'])}`);
+      } else if (type === 'workflow_aborted') {
+        this.flowEvent(flow, 'error', `Workflow abortado na fase "${String(p['phaseId'])}": ${String(p['reason'])}`);
       }
-    }
-    if (intent.selectors.length > 0 && found === 0) {
-      this.flowEvent(flow, 'warning', `Nenhum elemento específico de ${intent.name} detectado na página`);
-    }
+    };
 
-    // Run generic checks on this intent page
-    await this.runElementInventory(page);
-    await this.runLinkChecks(page);
+    const runner = new WorkflowRunner();
+    const result = await runner.execute(workflow, page, baseUrl, broadcast);
 
-    const ss = await this.snap(`${intent.id}-final`);
-    flow.screenshots.push(...[ss].filter(Boolean) as string[]);
-    flow.status = flow.events.some(e => e.type === 'error') ? 'fail' : 'pass';
+    // Screenshot after workflow
+    const ss = await this.snap(`${intent.id}-workflow-final`);
+    if (ss) flow.screenshots.push(ss);
+
+    // Determine flow status from workflow result
+    flow.status = result.status === 'passed'
+      ? 'pass'
+      : result.status === 'partial' ? 'partial' : 'fail';
+
+    this.flowEvent(
+      flow,
+      result.status === 'passed' ? 'success' : 'info',
+      `Workflow concluído: ${result.passedSteps}/${result.totalSteps} passos OK (${result.duration}ms)`,
+    );
   }
 
   // ─── 5. Accessibility ─────────────────────────────────────────────────────────

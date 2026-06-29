@@ -6,6 +6,30 @@
  *   - TestRunner (v2):    Playwright runs all checks → ONE Groq call for analysis
  */
 
+// ─── Audit modes & execution contract ───────────────────────────────────────
+
+export type AuditMode = 'global' | 'module' | 'flow';
+
+export interface TestGroup {
+  id: string;
+  name: string;
+  emoji: string;
+  category: 'functional' | 'seo' | 'links' | 'accessibility' | 'performance' | 'network';
+  module?: string;
+}
+
+export interface ExecutionContract {
+  mode: AuditMode;
+  intent: string;
+  intentName: string;
+  intentEmoji: string;
+  allowedTests: TestGroup[];   // shown as ✔ in UI
+  forbiddenItems: TestGroup[]; // shown as ✖ in UI
+  forbiddenCategories: string[];
+  customSteps?: string[];
+  needsClarification?: boolean;
+}
+
 // ─── Shared ─────────────────────────────────────────────────────────────────
 
 export interface PerformanceMetrics {
@@ -157,7 +181,7 @@ export interface TimelineEvent {
 export interface TestFlow {
   name: string;
   url: string;
-  status: 'pass' | 'fail' | 'skipped';
+  status: 'pass' | 'fail' | 'skipped' | 'partial';
   reason?: string;          // Why it failed or was skipped
   blockedBy?: string;       // e.g. "Login"
   errorMessage?: string;    // Visible DOM error message
@@ -209,7 +233,9 @@ export interface TestSummary {
   sessionId: string;
   goal: string;
   baseUrl: string;
-  // Intent
+  // Audit contract
+  contract?: ExecutionContract;
+  // Intent (kept for compat)
   intent?: string;
   intentName?: string;
   intentSteps?: string[];
@@ -263,6 +289,7 @@ export interface QaSession {
   testSummary?: TestSummary;
   report?: AnalysisReport;
   videoPath?: string;
+  contract?: ExecutionContract;
   intent?: string;
   intentName?: string;
   customSteps?: string[];

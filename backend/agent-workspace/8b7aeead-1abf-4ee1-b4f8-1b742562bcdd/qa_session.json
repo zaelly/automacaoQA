@@ -1,0 +1,1127 @@
+{
+  "id": "8b7aeead-1abf-4ee1-b4f8-1b742562bcdd",
+  "goal": "teste o pdv completo, quando chegar na tela inicial, feche o modal clicando no X e va para o modulo POS, em acesso rapido POS",
+  "baseUrl": "https://dev.notasfacil.com/pos",
+  "status": "completed",
+  "contract": {
+    "mode": "module",
+    "intent": "pdv",
+    "intentName": "PDV (Ponto de Venda)",
+    "intentEmoji": "🏪",
+    "allowedTests": [
+      {
+        "id": "login",
+        "name": "Login / Autenticação",
+        "emoji": "🔐",
+        "category": "functional"
+      },
+      {
+        "id": "pdv_open",
+        "name": "Abrir PDV/Caixa",
+        "emoji": "🏪",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_add_product",
+        "name": "Adicionar produto",
+        "emoji": "➕",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_change_qty",
+        "name": "Alterar quantidade",
+        "emoji": "🔢",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_discount",
+        "name": "Aplicar desconto",
+        "emoji": "💸",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_remove",
+        "name": "Remover produto",
+        "emoji": "✖️",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_payment",
+        "name": "Forma de pagamento",
+        "emoji": "💳",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_finish",
+        "name": "Finalizar venda",
+        "emoji": "✅",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_cancel",
+        "name": "Cancelar venda",
+        "emoji": "🚫",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "performance",
+        "name": "Performance (TTFB/LCP)",
+        "emoji": "⚡",
+        "category": "performance"
+      },
+      {
+        "id": "network_errors",
+        "name": "Erros de rede (4xx/5xx)",
+        "emoji": "🌐",
+        "category": "network"
+      },
+      {
+        "id": "console_errors",
+        "name": "Erros de console JS",
+        "emoji": "🖥️",
+        "category": "network"
+      }
+    ],
+    "forbiddenItems": [
+      {
+        "id": "seo_title",
+        "name": "Title da página",
+        "emoji": "📝",
+        "category": "seo"
+      },
+      {
+        "id": "seo_meta",
+        "name": "Meta description",
+        "emoji": "📋",
+        "category": "seo"
+      },
+      {
+        "id": "seo_h1",
+        "name": "Estrutura H1",
+        "emoji": "📰",
+        "category": "seo"
+      },
+      {
+        "id": "seo_images",
+        "name": "Imagens sem alt",
+        "emoji": "🖼️",
+        "category": "seo"
+      },
+      {
+        "id": "broken_links",
+        "name": "Links quebrados",
+        "emoji": "🔗",
+        "category": "links"
+      },
+      {
+        "id": "accessibility",
+        "name": "Acessibilidade",
+        "emoji": "♿",
+        "category": "accessibility"
+      },
+      {
+        "id": "module_checkout",
+        "name": "Checkout",
+        "emoji": "🛒",
+        "category": "functional",
+        "module": "checkout"
+      },
+      {
+        "id": "module_produtos",
+        "name": "Produtos",
+        "emoji": "📦",
+        "category": "functional",
+        "module": "produtos"
+      },
+      {
+        "id": "module_estoque",
+        "name": "Estoque",
+        "emoji": "📊",
+        "category": "functional",
+        "module": "estoque"
+      },
+      {
+        "id": "module_pedidos",
+        "name": "Pedidos",
+        "emoji": "📋",
+        "category": "functional",
+        "module": "pedidos"
+      },
+      {
+        "id": "module_financeiro",
+        "name": "Financeiro",
+        "emoji": "💰",
+        "category": "functional",
+        "module": "financeiro"
+      },
+      {
+        "id": "module_relatorios",
+        "name": "Relatórios",
+        "emoji": "📈",
+        "category": "functional",
+        "module": "relatorios"
+      },
+      {
+        "id": "module_cadastro",
+        "name": "Cadastro",
+        "emoji": "📝",
+        "category": "functional",
+        "module": "cadastro"
+      }
+    ],
+    "forbiddenCategories": [
+      "seo",
+      "links",
+      "accessibility"
+    ],
+    "customSteps": [
+      "feche o modal clicando no X",
+      "va para o modulo POS",
+      "acessar em acesso rapido POS"
+    ]
+  },
+  "intent": "pdv",
+  "intentName": "PDV (Ponto de Venda)",
+  "customSteps": [
+    "feche o modal clicando no X",
+    "va para o modulo POS",
+    "acessar em acesso rapido POS"
+  ],
+  "startedAt": "2026-06-28T21:18:35.611Z",
+  "testSummary": {
+    "sessionId": "8b7aeead-1abf-4ee1-b4f8-1b742562bcdd",
+    "goal": "teste o pdv completo, quando chegar na tela inicial, feche o modal clicando no X e va para o modulo POS, em acesso rapido POS",
+    "baseUrl": "https://dev.notasfacil.com/pos",
+    "contract": {
+      "mode": "module",
+      "intent": "pdv",
+      "intentName": "PDV (Ponto de Venda)",
+      "intentEmoji": "🏪",
+      "allowedTests": [
+        {
+          "id": "login",
+          "name": "Login / Autenticação",
+          "emoji": "🔐",
+          "category": "functional"
+        },
+        {
+          "id": "pdv_open",
+          "name": "Abrir PDV/Caixa",
+          "emoji": "🏪",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_add_product",
+          "name": "Adicionar produto",
+          "emoji": "➕",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_change_qty",
+          "name": "Alterar quantidade",
+          "emoji": "🔢",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_discount",
+          "name": "Aplicar desconto",
+          "emoji": "💸",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_remove",
+          "name": "Remover produto",
+          "emoji": "✖️",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_payment",
+          "name": "Forma de pagamento",
+          "emoji": "💳",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_finish",
+          "name": "Finalizar venda",
+          "emoji": "✅",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_cancel",
+          "name": "Cancelar venda",
+          "emoji": "🚫",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "performance",
+          "name": "Performance (TTFB/LCP)",
+          "emoji": "⚡",
+          "category": "performance"
+        },
+        {
+          "id": "network_errors",
+          "name": "Erros de rede (4xx/5xx)",
+          "emoji": "🌐",
+          "category": "network"
+        },
+        {
+          "id": "console_errors",
+          "name": "Erros de console JS",
+          "emoji": "🖥️",
+          "category": "network"
+        }
+      ],
+      "forbiddenItems": [
+        {
+          "id": "seo_title",
+          "name": "Title da página",
+          "emoji": "📝",
+          "category": "seo"
+        },
+        {
+          "id": "seo_meta",
+          "name": "Meta description",
+          "emoji": "📋",
+          "category": "seo"
+        },
+        {
+          "id": "seo_h1",
+          "name": "Estrutura H1",
+          "emoji": "📰",
+          "category": "seo"
+        },
+        {
+          "id": "seo_images",
+          "name": "Imagens sem alt",
+          "emoji": "🖼️",
+          "category": "seo"
+        },
+        {
+          "id": "broken_links",
+          "name": "Links quebrados",
+          "emoji": "🔗",
+          "category": "links"
+        },
+        {
+          "id": "accessibility",
+          "name": "Acessibilidade",
+          "emoji": "♿",
+          "category": "accessibility"
+        },
+        {
+          "id": "module_checkout",
+          "name": "Checkout",
+          "emoji": "🛒",
+          "category": "functional",
+          "module": "checkout"
+        },
+        {
+          "id": "module_produtos",
+          "name": "Produtos",
+          "emoji": "📦",
+          "category": "functional",
+          "module": "produtos"
+        },
+        {
+          "id": "module_estoque",
+          "name": "Estoque",
+          "emoji": "📊",
+          "category": "functional",
+          "module": "estoque"
+        },
+        {
+          "id": "module_pedidos",
+          "name": "Pedidos",
+          "emoji": "📋",
+          "category": "functional",
+          "module": "pedidos"
+        },
+        {
+          "id": "module_financeiro",
+          "name": "Financeiro",
+          "emoji": "💰",
+          "category": "functional",
+          "module": "financeiro"
+        },
+        {
+          "id": "module_relatorios",
+          "name": "Relatórios",
+          "emoji": "📈",
+          "category": "functional",
+          "module": "relatorios"
+        },
+        {
+          "id": "module_cadastro",
+          "name": "Cadastro",
+          "emoji": "📝",
+          "category": "functional",
+          "module": "cadastro"
+        }
+      ],
+      "forbiddenCategories": [
+        "seo",
+        "links",
+        "accessibility"
+      ],
+      "customSteps": [
+        "feche o modal clicando no X",
+        "va para o modulo POS",
+        "acessar em acesso rapido POS"
+      ]
+    },
+    "intent": "pdv",
+    "intentName": "PDV (Ponto de Venda)",
+    "intentSteps": [
+      "Abrir o PDV/caixa",
+      "Buscar e adicionar produto ao carrinho",
+      "Alterar quantidade do item",
+      "Aplicar desconto no item",
+      "Remover produto do carrinho",
+      "Adicionar cliente à venda",
+      "Selecionar forma de pagamento",
+      "Finalizar venda",
+      "Verificar comprovante/recibo gerado",
+      "Testar cancelamento de venda"
+    ],
+    "customSteps": [
+      "feche o modal clicando no X",
+      "va para o modulo POS",
+      "acessar em acesso rapido POS"
+    ],
+    "timeline": [
+      {
+        "timestamp": "2026-06-28T21:18:35.985Z",
+        "type": "navigate",
+        "flowName": "navigate",
+        "description": "Abrindo https://dev.notasfacil.com/pos",
+        "url": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.312Z",
+        "type": "success",
+        "flowName": "navigate",
+        "description": "Página carregada em 3892ms",
+        "detail": "Título: \"NOTA FACIL.COM\"",
+        "screenshotPath": "screenshots/step-001-inicial.png",
+        "url": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.312Z",
+        "type": "skipped",
+        "flowName": "SEO & Metadados",
+        "description": "[SEO & Metadados] Não executado — Fora do escopo desta auditoria"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.806Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Formulário de login detectado",
+        "screenshotPath": "screenshots/step-002-login_antes.png",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.840Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo \"Email ou usuário\" encontrado",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.859Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Preenchido com: \"sac@evictus.com.br\"",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.866Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo de senha encontrado",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:40.890Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Senha preenchida",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:41.283Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Campos preenchidos",
+        "screenshotPath": "screenshots/step-003-login_preenchido.png",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:41.317Z",
+        "type": "click",
+        "flowName": "Login",
+        "description": "Clicando botão \"Entrar\"",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:43.718Z",
+        "type": "success",
+        "flowName": "Login",
+        "description": "Login realizado — Redirecionado para https://dev.notasfacil.com/inicio",
+        "screenshotPath": "screenshots/step-004-login_apos_submit.png",
+        "url": "https://dev.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:43.719Z",
+        "type": "info",
+        "flowName": "Instruções Personalizadas",
+        "description": "Executando 3 instrução(ões) personalizada(s) do usuário",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:43.933Z",
+        "type": "info",
+        "flowName": "Instruções Personalizadas",
+        "description": "▶ feche o modal clicando no X",
+        "screenshotPath": "screenshots/step-005-custom_1_before.png",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:50.222Z",
+        "type": "success",
+        "flowName": "Instruções Personalizadas",
+        "description": "✓ feche o modal clicando no X",
+        "detail": "Clicou no seletor: [data-dismiss=\"modal\"]",
+        "screenshotPath": "screenshots/step-006-custom_1_after.png",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:50.566Z",
+        "type": "info",
+        "flowName": "Instruções Personalizadas",
+        "description": "▶ va para o modulo POS",
+        "screenshotPath": "screenshots/step-007-custom_2_before.png",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:50.888Z",
+        "type": "warning",
+        "flowName": "Instruções Personalizadas",
+        "description": "Instrução não executada: va para o modulo POS",
+        "detail": "Instrução não reconhecida pelo executor automático (sem ação tomada)",
+        "screenshotPath": "screenshots/step-008-custom_2_after.png",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:51.211Z",
+        "type": "info",
+        "flowName": "Instruções Personalizadas",
+        "description": "▶ acessar em acesso rapido POS",
+        "screenshotPath": "screenshots/step-009-custom_3_before.png",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:51.533Z",
+        "type": "warning",
+        "flowName": "Instruções Personalizadas",
+        "description": "Instrução não executada: acessar em acesso rapido POS",
+        "detail": "Instrução não reconhecida pelo executor automático (sem ação tomada)",
+        "screenshotPath": "screenshots/step-010-custom_3_after.png",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:51.534Z",
+        "type": "info",
+        "flowName": "PDV (Ponto de Venda)",
+        "description": "🏪 Intenção: PDV (Ponto de Venda)",
+        "detail": "Testar o fluxo completo do caixa/PDV",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.115Z",
+        "type": "info",
+        "flowName": "PDV (Ponto de Venda)",
+        "description": "Testando na página atual — nenhuma URL específica encontrada para PDV (Ponto de Venda)",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.131Z",
+        "type": "found",
+        "flowName": "PDV (Ponto de Venda)",
+        "description": "Elemento de PDV (Ponto de Venda) detectado",
+        "detail": "[class*=\"pos\"]",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.147Z",
+        "type": "info",
+        "flowName": "Inventário de Elementos",
+        "description": "2 formulário(s) · 43 botão(ões) · 2 campo(s) · 127 link(s)",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.172Z",
+        "type": "info",
+        "flowName": "Links",
+        "description": "Verificando 10 de 99 link(s) interno(s)",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.268Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Novo Potencialize seu negócio — conheça nossos módulos e planos\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.366Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"https://dev.notasfacil.com/admin/geral\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.468Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Sair\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.558Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Início\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.641Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Clientes\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.728Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Fideliza Fácil\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.809Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Fornecedores\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.892Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Transportadoras\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:52.975Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Funcionários\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:53.058Z",
+        "type": "error",
+        "flowName": "Links",
+        "description": "Link quebrado: \"Técnicos\"",
+        "detail": "HTTP 404",
+        "url": "https://dev.notasfacil.com/inicio"
+      },
+      {
+        "timestamp": "2026-06-28T21:18:53.383Z",
+        "type": "skipped",
+        "flowName": "Acessibilidade",
+        "description": "[Acessibilidade] Não executado — Fora do escopo desta auditoria"
+      }
+    ],
+    "flows": [
+      {
+        "name": "SEO & Metadados",
+        "url": "",
+        "status": "skipped",
+        "reason": "Fora do escopo desta auditoria",
+        "blockedBy": "Contrato",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:40.312Z",
+            "type": "skipped",
+            "flowName": "SEO & Metadados",
+            "description": "[SEO & Metadados] Não executado — Fora do escopo desta auditoria"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Login",
+        "url": "https://dev.notasfacil.com/login",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:40.806Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Formulário de login detectado",
+            "screenshotPath": "screenshots/step-002-login_antes.png",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:40.840Z",
+            "type": "found",
+            "flowName": "Login",
+            "description": "Campo \"Email ou usuário\" encontrado",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:40.859Z",
+            "type": "fill",
+            "flowName": "Login",
+            "description": "Preenchido com: \"sac@evictus.com.br\"",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:40.866Z",
+            "type": "found",
+            "flowName": "Login",
+            "description": "Campo de senha encontrado",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:40.890Z",
+            "type": "fill",
+            "flowName": "Login",
+            "description": "Senha preenchida",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:41.283Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Campos preenchidos",
+            "screenshotPath": "screenshots/step-003-login_preenchido.png",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:41.317Z",
+            "type": "click",
+            "flowName": "Login",
+            "description": "Clicando botão \"Entrar\"",
+            "url": "https://dev.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:43.718Z",
+            "type": "success",
+            "flowName": "Login",
+            "description": "Login realizado — Redirecionado para https://dev.notasfacil.com/inicio",
+            "screenshotPath": "screenshots/step-004-login_apos_submit.png",
+            "url": "https://dev.notasfacil.com/login"
+          }
+        ],
+        "screenshots": [
+          "screenshots/step-002-login_antes.png",
+          "screenshots/step-003-login_preenchido.png",
+          "screenshots/step-004-login_apos_submit.png"
+        ]
+      },
+      {
+        "name": "Instruções Personalizadas",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:43.719Z",
+            "type": "info",
+            "flowName": "Instruções Personalizadas",
+            "description": "Executando 3 instrução(ões) personalizada(s) do usuário",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:43.933Z",
+            "type": "info",
+            "flowName": "Instruções Personalizadas",
+            "description": "▶ feche o modal clicando no X",
+            "screenshotPath": "screenshots/step-005-custom_1_before.png",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:50.222Z",
+            "type": "success",
+            "flowName": "Instruções Personalizadas",
+            "description": "✓ feche o modal clicando no X",
+            "detail": "Clicou no seletor: [data-dismiss=\"modal\"]",
+            "screenshotPath": "screenshots/step-006-custom_1_after.png",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:50.566Z",
+            "type": "info",
+            "flowName": "Instruções Personalizadas",
+            "description": "▶ va para o modulo POS",
+            "screenshotPath": "screenshots/step-007-custom_2_before.png",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:50.888Z",
+            "type": "warning",
+            "flowName": "Instruções Personalizadas",
+            "description": "Instrução não executada: va para o modulo POS",
+            "detail": "Instrução não reconhecida pelo executor automático (sem ação tomada)",
+            "screenshotPath": "screenshots/step-008-custom_2_after.png",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:51.211Z",
+            "type": "info",
+            "flowName": "Instruções Personalizadas",
+            "description": "▶ acessar em acesso rapido POS",
+            "screenshotPath": "screenshots/step-009-custom_3_before.png",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:51.533Z",
+            "type": "warning",
+            "flowName": "Instruções Personalizadas",
+            "description": "Instrução não executada: acessar em acesso rapido POS",
+            "detail": "Instrução não reconhecida pelo executor automático (sem ação tomada)",
+            "screenshotPath": "screenshots/step-010-custom_3_after.png",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "PDV (Ponto de Venda)",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:51.534Z",
+            "type": "info",
+            "flowName": "PDV (Ponto de Venda)",
+            "description": "🏪 Intenção: PDV (Ponto de Venda)",
+            "detail": "Testar o fluxo completo do caixa/PDV",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.115Z",
+            "type": "info",
+            "flowName": "PDV (Ponto de Venda)",
+            "description": "Testando na página atual — nenhuma URL específica encontrada para PDV (Ponto de Venda)",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.131Z",
+            "type": "found",
+            "flowName": "PDV (Ponto de Venda)",
+            "description": "Elemento de PDV (Ponto de Venda) detectado",
+            "detail": "[class*=\"pos\"]",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": [
+          "screenshots/step-011-pdv_final.png"
+        ]
+      },
+      {
+        "name": "Inventário de Elementos",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "pass",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:52.147Z",
+            "type": "info",
+            "flowName": "Inventário de Elementos",
+            "description": "2 formulário(s) · 43 botão(ões) · 2 campo(s) · 127 link(s)",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Links",
+        "url": "https://dev.notasfacil.com/inicio",
+        "status": "fail",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:52.172Z",
+            "type": "info",
+            "flowName": "Links",
+            "description": "Verificando 10 de 99 link(s) interno(s)",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.268Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Novo Potencialize seu negócio — conheça nossos módulos e planos\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.366Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"https://dev.notasfacil.com/admin/geral\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.468Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Sair\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.558Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Início\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.641Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Clientes\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.728Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Fideliza Fácil\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.809Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Fornecedores\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.892Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Transportadoras\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:52.975Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Funcionários\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          },
+          {
+            "timestamp": "2026-06-28T21:18:53.058Z",
+            "type": "error",
+            "flowName": "Links",
+            "description": "Link quebrado: \"Técnicos\"",
+            "detail": "HTTP 404",
+            "url": "https://dev.notasfacil.com/inicio"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Acessibilidade",
+        "url": "",
+        "status": "skipped",
+        "reason": "Fora do escopo desta auditoria",
+        "blockedBy": "Contrato",
+        "events": [
+          {
+            "timestamp": "2026-06-28T21:18:53.383Z",
+            "type": "skipped",
+            "flowName": "Acessibilidade",
+            "description": "[Acessibilidade] Não executado — Fora do escopo desta auditoria"
+          }
+        ],
+        "screenshots": []
+      }
+    ],
+    "brokenLinks": [
+      {
+        "text": "Novo Potencialize seu negócio — conheça nossos módulos e planos",
+        "href": "https://dev.notasfacil.com/modulos",
+        "status": 404,
+        "elementHtml": "<a href=\"/modulos\">\n      <span class=\"promo-tag\">Novo</span>\n      Potencialize seu negócio — conheça nossos módulos e planos\n      <i class=\"fas fa-arrow-right promo-arrow\"></i>\n    </a>"
+      },
+      {
+        "text": "(sem texto)",
+        "href": "https://dev.notasfacil.com/admin/geral",
+        "status": 404,
+        "elementHtml": "<a href=\"/admin/geral\" class=\"nav-link text-secondary p-0\" id=\"wpp-monitor-link\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"WhatsApp Desconectado\" role=\"button\" aria-label=\"Status WhatsApp\">"
+      },
+      {
+        "text": "Sair",
+        "href": "https://dev.notasfacil.com/login/logout",
+        "status": 404,
+        "elementHtml": "<a class=\"nav-link\" href=\"/login/logout\">\n        Sair\n        <i class=\"fas fa-sign-out-alt\"></i>\n      </a>"
+      },
+      {
+        "text": "Início",
+        "href": "https://dev.notasfacil.com/inicio",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/inicio\" class=\"nav-link active\">\n                            <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                <path d=\"M3 9l9-7 9 7v11a2 2 "
+      },
+      {
+        "text": "Clientes",
+        "href": "https://dev.notasfacil.com/clientes",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/clientes\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <path d=\"M17 21v-2a4 4 0 "
+      },
+      {
+        "text": "Fideliza Fácil",
+        "href": "https://dev.notasfacil.com/fidelizaFacil",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/fidelizaFacil\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <path d=\"M20.84 4.61"
+      },
+      {
+        "text": "Fornecedores",
+        "href": "https://dev.notasfacil.com/fornecedores",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/fornecedores\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <path d=\"M20 7h-7L9 3"
+      },
+      {
+        "text": "Transportadoras",
+        "href": "https://dev.notasfacil.com/transportadoras",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/transportadoras\" class=\"nav-link \">\n                                <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                    <rect x=\"1\" y=\"3\" "
+      },
+      {
+        "text": "Funcionários",
+        "href": "https://dev.notasfacil.com/funcionarios",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/funcionarios\" class=\"nav-link \">\n                                        <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                            <path"
+      },
+      {
+        "text": "Técnicos",
+        "href": "https://dev.notasfacil.com/tecnicos",
+        "status": 404,
+        "elementHtml": "<a href=\"https://dev.notasfacil.com/tecnicos\" class=\"nav-link \">\n                                        <svg class=\"sb-icon\" viewBox=\"0 0 24 24\">\n                                            <path d=\""
+      }
+    ],
+    "networkErrors": [
+      {
+        "method": "POST",
+        "url": "https://dev.notasfacil.com/cdn-cgi/rum?",
+        "error": "net::ERR_ABORTED",
+        "timestamp": "2026-06-28T21:18:53.892Z"
+      },
+      {
+        "method": "GET",
+        "url": "https://dev.notasfacil.com//assets/img/logomarcas/icon.png",
+        "status": 404,
+        "duration": 40,
+        "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body></html>\n",
+        "timestamp": "2026-06-28T21:18:53.892Z"
+      }
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "performance": {
+      "ttfb": 70,
+      "fcp": 712,
+      "domInteractive": 688,
+      "domComplete": 1079,
+      "loadEvent": 1146,
+      "transferSize": 38345,
+      "resourceCount": 61,
+      "failedResources": 4
+    },
+    "loginStatus": "pass",
+    "videoPath": "video/page@d5ae016eff057e25c838f4b3a4b185d0.webm",
+    "totalChecks": 20,
+    "passed": 6,
+    "failed": 11,
+    "warnings": 2,
+    "startedAt": "2026-06-28T21:18:35.613Z",
+    "finishedAt": "2026-06-28T21:18:53.892Z",
+    "durationMs": 18279
+  },
+  "report": {
+    "summary": "O sistema apresentou vários links quebrados e falhas na execução de instruções personalizadas, mas o login e o PDV funcionaram corretamente. A performance da página foi razoável, com TTFB e FCP dentro dos limites aceitáveis.",
+    "overallScore": 60,
+    "findings": [
+      {
+        "title": "Links Quebrados",
+        "severity": "high",
+        "description": "Vários links na página apresentaram erro 404, indicando que as URLs estão incorretas ou os recursos não existem.",
+        "possibleCause": "Erro de configuração ou atualização de links",
+        "howToReproduce": "1. Acesse a página https://dev.notasfacil.com/pos. 2. Clique em qualquer um dos links quebrados listados nos resultados.",
+        "suggestion": "Verificar e corrigir as URLs dos links para garantir que elas sejam válidas e funcionais.",
+        "affectedUrl": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "title": "Instruções Personalizadas Não Executadas",
+        "severity": "medium",
+        "description": "As instruções para ir para o módulo POS e acessar em acesso rápido POS não foram executadas corretamente.",
+        "possibleCause": "Erro na automação ou na interpretação das instruções",
+        "howToReproduce": "1. Acesse a página https://dev.notasfacil.com/pos. 2. Tente executar as instruções personalizadas novamente.",
+        "suggestion": "Rever a automação e a interpretação das instruções para garantir que elas sejam executadas corretamente.",
+        "affectedUrl": "https://dev.notasfacil.com/pos"
+      },
+      {
+        "title": "Erro de Conexão",
+        "severity": "low",
+        "description": "Um erro de conexão foi registrado durante a execução dos testes.",
+        "possibleCause": "Problema de rede ou servidor",
+        "howToReproduce": "1. Acesse a página https://dev.notasfacil.com/pos. 2. Verifique os logs de rede e servidor para identificar o problema.",
+        "suggestion": "Verificar a conectividade e o servidor para garantir que não haja problemas de rede.",
+        "affectedUrl": "https://dev.notasfacil.com/pos"
+      }
+    ],
+    "recommendations": [
+      "Verificar e corrigir todos os links quebrados para garantir a funcionalidade da página.",
+      "Rever a automação e a interpretação das instruções personalizadas para garantir que elas sejam executadas corretamente.",
+      "Monitorar a performance da página e otimizar recursos para melhorar a experiência do usuário."
+    ],
+    "generatedAt": "2026-06-28T21:18:56.242Z",
+    "model": "llama-3.3-70b-versatile"
+  },
+  "finishedAt": "2026-06-28T21:18:56.242Z"
+}

@@ -1,0 +1,733 @@
+{
+  "id": "8de0878a-7a7d-4a72-80e7-b103d1c706a1",
+  "goal": "quando chegar na tela inicial, clique no botao de \"atualizar agora\" dentro do modal e depois Acesse o pos e teste o pdv",
+  "baseUrl": "https://app.notasfacil.com/login",
+  "status": "completed",
+  "contract": {
+    "mode": "module",
+    "intent": "pdv",
+    "intentName": "PDV (Ponto de Venda)",
+    "intentEmoji": "🏪",
+    "allowedTests": [
+      {
+        "id": "login",
+        "name": "Login / Autenticação",
+        "emoji": "🔐",
+        "category": "functional"
+      },
+      {
+        "id": "pdv_open",
+        "name": "Abrir PDV/Caixa",
+        "emoji": "🏪",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_add_product",
+        "name": "Adicionar produto",
+        "emoji": "➕",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_change_qty",
+        "name": "Alterar quantidade",
+        "emoji": "🔢",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_discount",
+        "name": "Aplicar desconto",
+        "emoji": "💸",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_remove",
+        "name": "Remover produto",
+        "emoji": "✖️",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_payment",
+        "name": "Forma de pagamento",
+        "emoji": "💳",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_finish",
+        "name": "Finalizar venda",
+        "emoji": "✅",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "pdv_cancel",
+        "name": "Cancelar venda",
+        "emoji": "🚫",
+        "category": "functional",
+        "module": "pdv"
+      },
+      {
+        "id": "performance",
+        "name": "Performance (TTFB/LCP)",
+        "emoji": "⚡",
+        "category": "performance"
+      },
+      {
+        "id": "network_errors",
+        "name": "Erros de rede (4xx/5xx)",
+        "emoji": "🌐",
+        "category": "network"
+      },
+      {
+        "id": "console_errors",
+        "name": "Erros de console JS",
+        "emoji": "🖥️",
+        "category": "network"
+      }
+    ],
+    "forbiddenItems": [
+      {
+        "id": "seo_title",
+        "name": "Title da página",
+        "emoji": "📝",
+        "category": "seo"
+      },
+      {
+        "id": "seo_meta",
+        "name": "Meta description",
+        "emoji": "📋",
+        "category": "seo"
+      },
+      {
+        "id": "seo_h1",
+        "name": "Estrutura H1",
+        "emoji": "📰",
+        "category": "seo"
+      },
+      {
+        "id": "seo_images",
+        "name": "Imagens sem alt",
+        "emoji": "🖼️",
+        "category": "seo"
+      },
+      {
+        "id": "broken_links",
+        "name": "Links quebrados",
+        "emoji": "🔗",
+        "category": "links"
+      },
+      {
+        "id": "accessibility",
+        "name": "Acessibilidade",
+        "emoji": "♿",
+        "category": "accessibility"
+      },
+      {
+        "id": "module_checkout",
+        "name": "Checkout",
+        "emoji": "🛒",
+        "category": "functional",
+        "module": "checkout"
+      },
+      {
+        "id": "module_produtos",
+        "name": "Produtos",
+        "emoji": "📦",
+        "category": "functional",
+        "module": "produtos"
+      },
+      {
+        "id": "module_estoque",
+        "name": "Estoque",
+        "emoji": "📊",
+        "category": "functional",
+        "module": "estoque"
+      },
+      {
+        "id": "module_pedidos",
+        "name": "Pedidos",
+        "emoji": "📋",
+        "category": "functional",
+        "module": "pedidos"
+      },
+      {
+        "id": "module_financeiro",
+        "name": "Financeiro",
+        "emoji": "💰",
+        "category": "functional",
+        "module": "financeiro"
+      },
+      {
+        "id": "module_relatorios",
+        "name": "Relatórios",
+        "emoji": "📈",
+        "category": "functional",
+        "module": "relatorios"
+      },
+      {
+        "id": "module_cadastro",
+        "name": "Cadastro",
+        "emoji": "📝",
+        "category": "functional",
+        "module": "cadastro"
+      }
+    ],
+    "forbiddenCategories": [
+      "seo",
+      "links",
+      "accessibility"
+    ],
+    "customSteps": [
+      "Clique no botão de 'atualizar agora' dentro do modal",
+      "Acesse o PDV"
+    ]
+  },
+  "intent": "pdv",
+  "intentName": "PDV (Ponto de Venda)",
+  "customSteps": [
+    "Clique no botão de 'atualizar agora' dentro do modal",
+    "Acesse o PDV"
+  ],
+  "startedAt": "2026-06-29T14:24:06.144Z",
+  "testSummary": {
+    "sessionId": "8de0878a-7a7d-4a72-80e7-b103d1c706a1",
+    "goal": "quando chegar na tela inicial, clique no botao de \"atualizar agora\" dentro do modal e depois Acesse o pos e teste o pdv",
+    "baseUrl": "https://app.notasfacil.com/login",
+    "contract": {
+      "mode": "module",
+      "intent": "pdv",
+      "intentName": "PDV (Ponto de Venda)",
+      "intentEmoji": "🏪",
+      "allowedTests": [
+        {
+          "id": "login",
+          "name": "Login / Autenticação",
+          "emoji": "🔐",
+          "category": "functional"
+        },
+        {
+          "id": "pdv_open",
+          "name": "Abrir PDV/Caixa",
+          "emoji": "🏪",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_add_product",
+          "name": "Adicionar produto",
+          "emoji": "➕",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_change_qty",
+          "name": "Alterar quantidade",
+          "emoji": "🔢",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_discount",
+          "name": "Aplicar desconto",
+          "emoji": "💸",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_remove",
+          "name": "Remover produto",
+          "emoji": "✖️",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_payment",
+          "name": "Forma de pagamento",
+          "emoji": "💳",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_finish",
+          "name": "Finalizar venda",
+          "emoji": "✅",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "pdv_cancel",
+          "name": "Cancelar venda",
+          "emoji": "🚫",
+          "category": "functional",
+          "module": "pdv"
+        },
+        {
+          "id": "performance",
+          "name": "Performance (TTFB/LCP)",
+          "emoji": "⚡",
+          "category": "performance"
+        },
+        {
+          "id": "network_errors",
+          "name": "Erros de rede (4xx/5xx)",
+          "emoji": "🌐",
+          "category": "network"
+        },
+        {
+          "id": "console_errors",
+          "name": "Erros de console JS",
+          "emoji": "🖥️",
+          "category": "network"
+        }
+      ],
+      "forbiddenItems": [
+        {
+          "id": "seo_title",
+          "name": "Title da página",
+          "emoji": "📝",
+          "category": "seo"
+        },
+        {
+          "id": "seo_meta",
+          "name": "Meta description",
+          "emoji": "📋",
+          "category": "seo"
+        },
+        {
+          "id": "seo_h1",
+          "name": "Estrutura H1",
+          "emoji": "📰",
+          "category": "seo"
+        },
+        {
+          "id": "seo_images",
+          "name": "Imagens sem alt",
+          "emoji": "🖼️",
+          "category": "seo"
+        },
+        {
+          "id": "broken_links",
+          "name": "Links quebrados",
+          "emoji": "🔗",
+          "category": "links"
+        },
+        {
+          "id": "accessibility",
+          "name": "Acessibilidade",
+          "emoji": "♿",
+          "category": "accessibility"
+        },
+        {
+          "id": "module_checkout",
+          "name": "Checkout",
+          "emoji": "🛒",
+          "category": "functional",
+          "module": "checkout"
+        },
+        {
+          "id": "module_produtos",
+          "name": "Produtos",
+          "emoji": "📦",
+          "category": "functional",
+          "module": "produtos"
+        },
+        {
+          "id": "module_estoque",
+          "name": "Estoque",
+          "emoji": "📊",
+          "category": "functional",
+          "module": "estoque"
+        },
+        {
+          "id": "module_pedidos",
+          "name": "Pedidos",
+          "emoji": "📋",
+          "category": "functional",
+          "module": "pedidos"
+        },
+        {
+          "id": "module_financeiro",
+          "name": "Financeiro",
+          "emoji": "💰",
+          "category": "functional",
+          "module": "financeiro"
+        },
+        {
+          "id": "module_relatorios",
+          "name": "Relatórios",
+          "emoji": "📈",
+          "category": "functional",
+          "module": "relatorios"
+        },
+        {
+          "id": "module_cadastro",
+          "name": "Cadastro",
+          "emoji": "📝",
+          "category": "functional",
+          "module": "cadastro"
+        }
+      ],
+      "forbiddenCategories": [
+        "seo",
+        "links",
+        "accessibility"
+      ],
+      "customSteps": [
+        "Clique no botão de 'atualizar agora' dentro do modal",
+        "Acesse o PDV"
+      ]
+    },
+    "intent": "pdv",
+    "intentName": "PDV (Ponto de Venda)",
+    "intentSteps": [
+      "Abrir o PDV/caixa",
+      "Buscar e adicionar produto ao carrinho",
+      "Alterar quantidade do item",
+      "Aplicar desconto no item",
+      "Remover produto do carrinho",
+      "Adicionar cliente à venda",
+      "Selecionar forma de pagamento",
+      "Finalizar venda",
+      "Verificar comprovante/recibo gerado",
+      "Testar cancelamento de venda"
+    ],
+    "customSteps": [
+      "Clique no botão de 'atualizar agora' dentro do modal",
+      "Acesse o PDV"
+    ],
+    "timeline": [
+      {
+        "timestamp": "2026-06-29T14:24:06.419Z",
+        "type": "navigate",
+        "flowName": "navigate",
+        "description": "Abrindo https://app.notasfacil.com/login",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:09.827Z",
+        "type": "success",
+        "flowName": "navigate",
+        "description": "Página carregada em 3139ms",
+        "detail": "Título: \"NOTAS FÁCIL.COM\"",
+        "screenshotPath": "screenshots/step-001-inicial.png",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:09.828Z",
+        "type": "skipped",
+        "flowName": "SEO & Metadados",
+        "description": "[SEO & Metadados] Não executado — Fora do escopo desta auditoria"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.135Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Formulário de login detectado",
+        "screenshotPath": "screenshots/step-002-login_antes.png",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.167Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo \"Email ou usuário\" encontrado",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.202Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Preenchido com: \"demo\"",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.218Z",
+        "type": "found",
+        "flowName": "Login",
+        "description": "Campo de senha encontrado",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.230Z",
+        "type": "fill",
+        "flowName": "Login",
+        "description": "Senha preenchida",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.585Z",
+        "type": "info",
+        "flowName": "Login",
+        "description": "Campos preenchidos",
+        "screenshotPath": "screenshots/step-003-login_preenchido.png",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:10.604Z",
+        "type": "click",
+        "flowName": "Login",
+        "description": "Clicando botão \"Entrar\"",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:11.010Z",
+        "type": "warning",
+        "flowName": "Login",
+        "description": "Resultado inconclusivo — sem redirecionamento ou confirmação",
+        "screenshotPath": "screenshots/step-004-login_apos_submit.png",
+        "url": "https://app.notasfacil.com/login"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:11.011Z",
+        "type": "skipped",
+        "flowName": "Checkout / PDV",
+        "description": "[Checkout / PDV] Não executado — Login não concluído"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:11.011Z",
+        "type": "skipped",
+        "flowName": "Formulários internos",
+        "description": "[Formulários internos] Não executado — Login não concluído"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:11.011Z",
+        "type": "skipped",
+        "flowName": "Links internos",
+        "description": "[Links internos] Não executado — Login não concluído"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:11.011Z",
+        "type": "skipped",
+        "flowName": "PDV (Ponto de Venda)",
+        "description": "[PDV (Ponto de Venda)] Não executado — Requer login bem-sucedido"
+      },
+      {
+        "timestamp": "2026-06-29T14:24:11.011Z",
+        "type": "skipped",
+        "flowName": "Acessibilidade",
+        "description": "[Acessibilidade] Não executado — Fora do escopo desta auditoria"
+      }
+    ],
+    "flows": [
+      {
+        "name": "SEO & Metadados",
+        "url": "",
+        "status": "skipped",
+        "reason": "Fora do escopo desta auditoria",
+        "blockedBy": "Contrato",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:09.828Z",
+            "type": "skipped",
+            "flowName": "SEO & Metadados",
+            "description": "[SEO & Metadados] Não executado — Fora do escopo desta auditoria"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Login",
+        "url": "https://app.notasfacil.com/login",
+        "status": "fail",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:10.135Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Formulário de login detectado",
+            "screenshotPath": "screenshots/step-002-login_antes.png",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:10.167Z",
+            "type": "found",
+            "flowName": "Login",
+            "description": "Campo \"Email ou usuário\" encontrado",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:10.202Z",
+            "type": "fill",
+            "flowName": "Login",
+            "description": "Preenchido com: \"demo\"",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:10.218Z",
+            "type": "found",
+            "flowName": "Login",
+            "description": "Campo de senha encontrado",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:10.230Z",
+            "type": "fill",
+            "flowName": "Login",
+            "description": "Senha preenchida",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:10.585Z",
+            "type": "info",
+            "flowName": "Login",
+            "description": "Campos preenchidos",
+            "screenshotPath": "screenshots/step-003-login_preenchido.png",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:10.604Z",
+            "type": "click",
+            "flowName": "Login",
+            "description": "Clicando botão \"Entrar\"",
+            "url": "https://app.notasfacil.com/login"
+          },
+          {
+            "timestamp": "2026-06-29T14:24:11.010Z",
+            "type": "warning",
+            "flowName": "Login",
+            "description": "Resultado inconclusivo — sem redirecionamento ou confirmação",
+            "screenshotPath": "screenshots/step-004-login_apos_submit.png",
+            "url": "https://app.notasfacil.com/login"
+          }
+        ],
+        "screenshots": [
+          "screenshots/step-002-login_antes.png",
+          "screenshots/step-003-login_preenchido.png",
+          "screenshots/step-004-login_apos_submit.png"
+        ],
+        "reason": "Nenhuma confirmação de login detectada após o submit"
+      },
+      {
+        "name": "Checkout / PDV",
+        "url": "",
+        "status": "skipped",
+        "reason": "Login não concluído",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:11.011Z",
+            "type": "skipped",
+            "flowName": "Checkout / PDV",
+            "description": "[Checkout / PDV] Não executado — Login não concluído"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Formulários internos",
+        "url": "",
+        "status": "skipped",
+        "reason": "Login não concluído",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:11.011Z",
+            "type": "skipped",
+            "flowName": "Formulários internos",
+            "description": "[Formulários internos] Não executado — Login não concluído"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Links internos",
+        "url": "",
+        "status": "skipped",
+        "reason": "Login não concluído",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:11.011Z",
+            "type": "skipped",
+            "flowName": "Links internos",
+            "description": "[Links internos] Não executado — Login não concluído"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "PDV (Ponto de Venda)",
+        "url": "",
+        "status": "skipped",
+        "reason": "Requer login bem-sucedido",
+        "blockedBy": "Login",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:11.011Z",
+            "type": "skipped",
+            "flowName": "PDV (Ponto de Venda)",
+            "description": "[PDV (Ponto de Venda)] Não executado — Requer login bem-sucedido"
+          }
+        ],
+        "screenshots": []
+      },
+      {
+        "name": "Acessibilidade",
+        "url": "",
+        "status": "skipped",
+        "reason": "Fora do escopo desta auditoria",
+        "blockedBy": "Contrato",
+        "events": [
+          {
+            "timestamp": "2026-06-29T14:24:11.011Z",
+            "type": "skipped",
+            "flowName": "Acessibilidade",
+            "description": "[Acessibilidade] Não executado — Fora do escopo desta auditoria"
+          }
+        ],
+        "screenshots": []
+      }
+    ],
+    "brokenLinks": [],
+    "networkErrors": [],
+    "consoleErrors": [],
+    "performance": {
+      "ttfb": 94,
+      "fcp": 528,
+      "domInteractive": 483,
+      "domComplete": 1585,
+      "loadEvent": 1586,
+      "transferSize": 6829,
+      "resourceCount": 11,
+      "failedResources": 0
+    },
+    "loginStatus": "fail",
+    "loginError": "Sem redirecionamento ou confirmação após o submit",
+    "videoPath": "video/page@f7fa0671bafb48eec0c1a623d6b55a29.webm",
+    "totalChecks": 5,
+    "passed": 4,
+    "failed": 0,
+    "warnings": 1,
+    "startedAt": "2026-06-29T14:24:06.144Z",
+    "finishedAt": "2026-06-29T14:24:11.616Z",
+    "durationMs": 5472
+  },
+  "report": {
+    "summary": "O sistema apresentou falha crítica no login, impedindo o acesso a funcionalidades principais. A performance da página foi satisfatória, com TTFB e FCP dentro dos padrões aceitáveis.",
+    "overallScore": 20,
+    "findings": [
+      {
+        "title": "Falha no Login",
+        "severity": "critical",
+        "description": "O sistema não redirecionou ou confirmou o login após o submit, impedindo o acesso a funcionalidades dependentes.",
+        "possibleCause": "Problema com as credenciais de acesso ou configuração de autenticação.",
+        "howToReproduce": "1. Acesse https://app.notasfacil.com/login. 2. Insira credenciais de acesso. 3. Clique no botão de submit.",
+        "suggestion": "Verificar as configurações de autenticação e credenciais de acesso. Implementar um mecanismo de feedback para o usuário em caso de falha no login.",
+        "affectedUrl": "https://app.notasfacil.com/login"
+      }
+    ],
+    "recommendations": [
+      "Implementar um mecanismo de autenticação robusto e seguro.",
+      "Melhorar a experiência do usuário com feedback claro em caso de erros.",
+      "Realizar testes de login com diferentes conjuntos de credenciais para garantir a funcionalidade."
+    ],
+    "generatedAt": "2026-06-29T14:24:13.903Z",
+    "model": "llama-3.3-70b-versatile"
+  },
+  "finishedAt": "2026-06-29T14:24:13.903Z"
+}

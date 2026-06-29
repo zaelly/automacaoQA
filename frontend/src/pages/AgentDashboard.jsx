@@ -50,7 +50,8 @@ function LiveTerminal({ logs }) {
     if (l.includes('❌') || l.startsWith('ERROR') || l.includes('falhou')) return '#ef4444'
     if (l.includes('⚠️') || l.startsWith('WARN'))  return '#f59e0b'
     if (l.includes('✅') || l.includes('OK'))       return '#22c55e'
-    if (l.startsWith('→') || l.includes('Intenção')) return '#7c3aed'
+    if (l.startsWith('→') || l.includes('Plano') || l.includes('Intenção')) return '#7c3aed'
+    if (l.includes('⚡')) return '#fbbf24'
     if (l.includes('⏭️')) return '#64748b'
     return '#94a3b8'
   }
@@ -66,21 +67,58 @@ function LiveTerminal({ logs }) {
   )
 }
 
-// ── Intent picker ─────────────────────────────────────────────────────────────
+// ── Audit mode selector ───────────────────────────────────────────────────────
+const MODES = [
+  {
+    id: 'global',
+    name: 'Auditoria Global',
+    emoji: '🌐',
+    desc: 'Testa tudo: SEO, funcional, links, acessibilidade e performance',
+  },
+  {
+    id: 'module',
+    name: 'Por Módulo',
+    emoji: '🎯',
+    desc: 'Foca em um módulo específico. Ignora SEO, links e acessibilidade',
+  },
+  {
+    id: 'flow',
+    name: 'Por Fluxo',
+    emoji: '⚡',
+    desc: 'Apenas os passos funcionais do fluxo. Zero infra, zero ruído',
+  },
+]
+
+function ModeSelector({ value, onChange, disabled }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+      {MODES.map(m => (
+        <button key={m.id} onClick={() => !disabled && onChange(m.id)} style={{
+          padding: '12px 10px', borderRadius: 10, cursor: disabled ? 'default' : 'pointer',
+          textAlign: 'left', border: 'none',
+          outline: value === m.id ? '2px solid rgba(124,58,237,0.7)' : '1px solid rgba(255,255,255,0.08)',
+          background: value === m.id ? 'rgba(124,58,237,0.22)' : 'rgba(15,10,40,0.5)',
+          opacity: disabled ? 0.7 : 1,
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 4 }}>{m.emoji}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: value === m.id ? '#c4b5fd' : '#e2e8f0' }}>{m.name}</div>
+          <div style={{ fontSize: 10, color: '#64748b', marginTop: 3, lineHeight: 1.4 }}>{m.desc}</div>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Intent picker (clarify stage) ─────────────────────────────────────────────
 function IntentPicker({ allIntents, selected, onSelect }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
       {allIntents.map(intent => (
-        <button key={intent.id} onClick={() => onSelect(intent)}
-          style={{
-            padding: '10px 12px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-            border: selected?.id === intent.id
-              ? '1px solid rgba(124,58,237,0.7)'
-              : '1px solid rgba(255,255,255,0.08)',
-            background: selected?.id === intent.id
-              ? 'rgba(124,58,237,0.25)'
-              : 'rgba(15,10,40,0.5)',
-          }}>
+        <button key={intent.id} onClick={() => onSelect(intent)} style={{
+          padding: '10px 12px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', border: 'none',
+          outline: selected?.id === intent.id ? '2px solid rgba(124,58,237,0.7)' : '1px solid rgba(255,255,255,0.08)',
+          background: selected?.id === intent.id ? 'rgba(124,58,237,0.25)' : 'rgba(15,10,40,0.5)',
+        }}>
           <div style={{ fontSize: 20, marginBottom: 4 }}>{intent.emoji}</div>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>{intent.name}</div>
           <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{intent.description}</div>
@@ -90,39 +128,77 @@ function IntentPicker({ allIntents, selected, onSelect }) {
   )
 }
 
-// ── Intent steps preview ──────────────────────────────────────────────────────
-function IntentSteps({ intent, customSteps = [] }) {
-  if (!intent?.steps) return null
-  const totalSteps = intent.steps.length + customSteps.length
+// ── Contract preview — the ✔/✖ panel ──────────────────────────────────────────
+function ContractPreview({ contract }) {
+  if (!contract) return null
+
+  const hasCustom = contract.customSteps?.length > 0
+  const hasForbidden = contract.forbiddenItems?.length > 0
+
   return (
-    <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, padding: '12px 14px' }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginBottom: 8 }}>
-        PLANO DE EXECUÇÃO — {intent.emoji} {intent.name}
-        {customSteps.length > 0 && (
-          <span style={{ marginLeft: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: 10 }}>
-            + {customSteps.length} instrução(ões) personalizada(s)
-          </span>
-        )}
-      </div>
-      {intent.steps.map((step, i) => (
-        <div key={`lib-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0' }}>
-          <span style={{ fontSize: 11, color: '#475569', fontFamily: 'monospace', flexShrink: 0, width: 18 }}>{String(i+1).padStart(2,'0')}.</span>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>{step}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Mode badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)' }}>
+        <span style={{ fontSize: 26 }}>{contract.intentEmoji}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginBottom: 2 }}>
+            {contract.mode === 'global' ? '🌐 AUDITORIA GLOBAL'
+              : contract.mode === 'module' ? '🎯 AUDITORIA POR MÓDULO'
+              : '⚡ AUDITORIA POR FLUXO'}
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#e2e8f0' }}>{contract.intentName}</div>
         </div>
-      ))}
-      {customSteps.length > 0 && (
-        <>
-          <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', margin: '8px 0 6px' }} />
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>INSTRUÇÕES PERSONALIZADAS</div>
-          {customSteps.map((step, i) => (
-            <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0' }}>
-              <span style={{ fontSize: 11, color: '#92400e', fontFamily: 'monospace', flexShrink: 0, width: 18 }}>{String(intent.steps.length + i + 1).padStart(2,'0')}.</span>
-              <span style={{ fontSize: 12, color: '#fbbf24', fontStyle: 'italic' }}>⚡ {step}</span>
+        <div style={{ textAlign: 'right', fontSize: 11, color: '#64748b' }}>
+          <div>{contract.allowedTests?.length || 0} habilitados</div>
+          {hasForbidden && <div style={{ color: '#ef4444' }}>{contract.forbiddenItems.length} ignorados</div>}
+        </div>
+      </div>
+
+      {/* ✔/✖ two-column layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: hasForbidden ? '1fr 1fr' : '1fr', gap: 12 }}>
+
+        {/* Allowed column */}
+        <div style={{ background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', marginBottom: 10, letterSpacing: '0.05em' }}>
+            ESCOPO DETECTADO
+          </div>
+          {contract.allowedTests?.map(t => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '3px 0' }}>
+              <span style={{ color: '#22c55e', fontSize: 12, width: 14, flexShrink: 0 }}>✔</span>
+              <span style={{ fontSize: 11, color: '#4ade80' }}>{t.emoji}</span>
+              <span style={{ fontSize: 12, color: '#86efac' }}>{t.name}</span>
             </div>
           ))}
-        </>
-      )}
-      <div style={{ marginTop: 8, fontSize: 11, color: '#475569' }}>{totalSteps} passos no total</div>
+          {hasCustom && (
+            <>
+              <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', margin: '8px 0 6px' }} />
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', marginBottom: 6 }}>INSTRUÇÕES PERSONALIZADAS</div>
+              {contract.customSteps.map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, padding: '3px 0' }}>
+                  <span style={{ color: '#f59e0b', fontSize: 12, width: 14, flexShrink: 0 }}>⚡</span>
+                  <span style={{ fontSize: 11, color: '#fbbf24', fontStyle: 'italic', lineHeight: 1.4 }}>{s}</span>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Forbidden column */}
+        {hasForbidden && (
+          <div style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.12)', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', marginBottom: 10, letterSpacing: '0.05em' }}>
+              IGNORADO
+            </div>
+            {contract.forbiddenItems?.map(t => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '3px 0' }}>
+                <span style={{ color: '#475569', fontSize: 12, width: 14, flexShrink: 0 }}>✖</span>
+                <span style={{ fontSize: 11, color: '#475569' }}>{t.emoji}</span>
+                <span style={{ fontSize: 12, color: '#64748b' }}>{t.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -133,15 +209,15 @@ export default function AgentDashboard() {
   const [baseUrl, setBaseUrl]   = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [mode, setMode]         = useState('module')
 
-  // Intent state machine:  'form' → 'detecting' → 'confirm' | 'clarify' → 'running' → 'done'
-  const [stage, setStage]                = useState('form')
-  const [detectedIntent, setDetectedIntent]  = useState(null)
-  const [selectedIntent, setSelectedIntent]  = useState(null)
-  const [allIntents, setAllIntents]          = useState([])
-  const [customSteps, setCustomSteps]        = useState([])
+  // State machine: 'form' → 'planning' → 'review' | 'clarify' → 'running' → 'done'
+  const [stage, setStage]               = useState('form')
+  const [contract, setContract]         = useState(null)
+  const [allIntents, setAllIntents]     = useState([])
+  const [selectedIntent, setSelectedIntent] = useState(null)
 
-  const [logs, setLogs]             = useState([])
+  const [logs, setLogs]                 = useState([])
   const [lastSessionId, setLastSessionId] = useState(null)
 
   const wsRef    = useRef(null)
@@ -159,7 +235,7 @@ export default function AgentDashboard() {
         if (!msg.__agent) return
         if (activeId.current && msg.sessionId !== activeId.current) return
         const { type, payload } = msg
-        if (type === 'phase_change')  addLog(`→ ${payload.label}`)
+        if (type === 'phase_change')   addLog(`→ ${payload.label}`)
         else if (type === 'check_result') {
           const icon = payload.status === 'fail' ? '❌' : payload.status === 'warning' ? '⚠️' : payload.status === 'skipped' ? '⏭️' : '✅'
           addLog(`  ${icon} ${payload.name}${payload.detail ? ': ' + payload.detail : ''}`)
@@ -175,55 +251,78 @@ export default function AgentDashboard() {
     return () => ws.close()
   }, [addLog])
 
-  // ── Step 1: Detect intent ─────────────────────────────────────────────────
-  const handleDetect = async () => {
+  // ── Step 1: Generate plan ─────────────────────────────────────────────────
+  const handlePlan = async () => {
     if (!goal.trim() || !baseUrl.trim()) return
-    setStage('detecting')
+    setStage('planning')
     setLogs([])
-    addLog(`→ Analisando objetivo...`)
+    setContract(null)
+    setSelectedIntent(null)
+
+    const modeName = MODES.find(m => m.id === mode)?.name || mode
+    addLog(`→ Gerando plano — modo: ${modeName}`)
 
     try {
-      const data = await apiPost('/agent/detect-intent', { goal: goal.trim() })
+      const data = await apiPost('/agent/plan', { goal: goal.trim(), mode })
       if (data.allIntents) setAllIntents(data.allIntents)
 
-      const steps = Array.isArray(data.customSteps) ? data.customSteps : []
-      setCustomSteps(steps)
-
-      if (data.needsClarification || data.intent === 'unknown') {
-        addLog('→ Objetivo amplo — selecione o foco do teste')
+      if (data.needsClarification) {
+        addLog('→ Objetivo amplo — selecione o módulo alvo')
         setStage('clarify')
-      } else {
-        setDetectedIntent(data.intentData)
-        setSelectedIntent(data.intentData)
-        addLog(`→ Intenção detectada: ${data.intentData?.emoji} ${data.intentData?.name} (confiança: ${data.confidence})`)
-        if (steps.length > 0) {
-          addLog(`→ ${steps.length} instrução(ões) personalizada(s) extraída(s) do objetivo`)
-          steps.forEach(s => addLog(`  ⚡ ${s}`))
-        }
-        setStage('confirm')
+        return
       }
+
+      setContract(data)
+      const allowed = data.allowedTests?.length || 0
+      const forbidden = data.forbiddenItems?.length || 0
+      addLog(`→ Plano: ${data.intentEmoji} ${data.intentName}`)
+      addLog(`→ ${allowed} testes habilitados · ${forbidden} ignorados`)
+      if (data.customSteps?.length) {
+        addLog(`→ ${data.customSteps.length} instrução(ões) personalizada(s):`)
+        data.customSteps.forEach(s => addLog(`  ⚡ ${s}`))
+      }
+      setStage('review')
     } catch {
-      addLog('→ Erro ao detectar intenção — usando exploração automática')
-      setDetectedIntent(null)
-      setSelectedIntent({ id: 'exploratorio', name: 'Exploração Automática', emoji: '🔍' })
-      setStage('confirm')
+      addLog('→ Erro ao gerar plano — usando exploração automática')
+      setContract({ mode, intent: 'exploratorio', intentName: 'Exploração Automática', intentEmoji: '🔍', allowedTests: [], forbiddenItems: [], forbiddenCategories: [] })
+      setStage('review')
     }
   }
 
-  // ── Step 2: Start session with confirmed intent ────────────────────────────
+  // ── Step 1b: Clarify — user picks intent manually ─────────────────────────
+  const handleConfirmClarify = async () => {
+    if (!selectedIntent) return
+    setStage('planning')
+    addLog(`→ Gerando plano para ${selectedIntent.emoji} ${selectedIntent.name}...`)
+
+    try {
+      const data = await apiPost('/agent/plan', { goal: goal.trim(), mode, forceIntent: selectedIntent.id })
+      setContract(data)
+      const allowed = data.allowedTests?.length || 0
+      const forbidden = data.forbiddenItems?.length || 0
+      addLog(`→ ${allowed} testes habilitados · ${forbidden} ignorados`)
+      setStage('review')
+    } catch {
+      setContract({ mode, intent: selectedIntent.id, intentName: selectedIntent.name, intentEmoji: selectedIntent.emoji, allowedTests: [], forbiddenItems: [], forbiddenCategories: [] })
+      setStage('review')
+    }
+  }
+
+  // ── Step 2: Start session ─────────────────────────────────────────────────
   const handleStart = async () => {
-    const intentToUse = selectedIntent
     setStage('running')
     activeId.current = null
 
-    const icon = intentToUse?.emoji || '🔍'
-    addLog(`→ Iniciando auditoria ${icon} ${intentToUse?.name || 'Exploração'} em ${baseUrl.trim()}`)
+    const intentId   = contract?.intent || 'exploratorio'
+    const intentName = contract?.intentName || 'Exploração Automática'
+    addLog(`→ Iniciando ${contract?.intentEmoji || '🔍'} ${intentName} em ${baseUrl.trim()}`)
 
     const body = {
-      goal: goal.trim(),
-      baseUrl: baseUrl.trim(),
-      intent: intentToUse?.id,
-      ...(customSteps.length > 0 ? { customSteps } : {}),
+      goal:       goal.trim(),
+      baseUrl:    baseUrl.trim(),
+      mode,
+      intent:     intentId,
+      customSteps: contract?.customSteps?.length ? contract.customSteps : undefined,
       ...(username || password
         ? { credentials: { username: username.trim() || undefined, password: password || undefined } }
         : {}),
@@ -234,22 +333,21 @@ export default function AgentDashboard() {
       if (data.sessionId) {
         activeId.current = data.sessionId
         setLastSessionId(data.sessionId)
-        addLog(`→ Sessão iniciada`)
+        addLog(`→ Sessão iniciada · ID: ${data.sessionId.slice(0, 8)}...`)
       } else {
         addLog(`ERROR: ${data.error || 'Falha ao iniciar'}`)
-        setStage('confirm')
+        setStage('review')
       }
     } catch (err) {
       addLog(`ERROR: ${err.message}`)
-      setStage('confirm')
+      setStage('review')
     }
   }
 
   const handleReset = () => {
     setStage('form')
-    setDetectedIntent(null)
+    setContract(null)
     setSelectedIntent(null)
-    setCustomSteps([])
     setLogs([])
     setLastSessionId(null)
     activeId.current = null
@@ -258,108 +356,107 @@ export default function AgentDashboard() {
   const isRunning = stage === 'running'
 
   return (
-    <div style={{ maxWidth: 780, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 820, margin: '0 auto', padding: '24px 16px' }}>
       {/* Title */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: '#e2e8f0', margin: 0 }}>Agente IA — Nova Auditoria</h1>
         <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-          Playwright + Groq · Relatórios em <strong style={{ color: '#a78bfa' }}>Relatórios → Agente IA</strong>
+          Playwright + Groq · Escopo preciso antes de executar
         </p>
       </div>
 
-      {/* ── FORM (idle) ──────────────────────────────────────────────────── */}
-      {(stage === 'form' || stage === 'detecting') && (
+      {/* ── FORM ──────────────────────────────────────────────────────────── */}
+      {(stage === 'form' || stage === 'planning') && (
         <Card style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Mode selector */}
+            <div>
+              <Label>MODO DE AUDITORIA</Label>
+              <ModeSelector value={mode} onChange={setMode} disabled={stage === 'planning'} />
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(124,58,237,0.1)', marginTop: 2 }} />
+
+            {/* URL + credentials */}
             <div>
               <Label>URL DO SISTEMA *</Label>
-              <TextInput value={baseUrl} onChange={e => setBaseUrl(e.target.value)} placeholder="https://app.exemplo.com" disabled={stage === 'detecting'} />
+              <TextInput value={baseUrl} onChange={e => setBaseUrl(e.target.value)} placeholder="https://app.exemplo.com" disabled={stage === 'planning'} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div><Label>USUÁRIO / E-MAIL</Label><TextInput value={username} onChange={e => setUsername(e.target.value)} placeholder="usuario@exemplo.com" disabled={stage === 'detecting'} /></div>
-              <div><Label>SENHA</Label><TextInput type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" disabled={stage === 'detecting'} /></div>
+              <div><Label>USUÁRIO / E-MAIL</Label><TextInput value={username} onChange={e => setUsername(e.target.value)} placeholder="usuario@exemplo.com" disabled={stage === 'planning'} /></div>
+              <div><Label>SENHA</Label><TextInput type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" disabled={stage === 'planning'} /></div>
             </div>
+
+            {/* Goal */}
             <div>
               <Label>OBJETIVO DO TESTE *</Label>
-              <textarea value={goal} onChange={e => setGoal(e.target.value)} disabled={stage === 'detecting'}
-                placeholder={'Ex: "Teste o PDV inteiro" ou "Verifique se o checkout funciona"'}
+              <textarea value={goal} onChange={e => setGoal(e.target.value)} disabled={stage === 'planning'}
+                placeholder={mode === 'global'
+                  ? 'Ex: "Audite o sistema inteiro" — testa tudo sem filtros'
+                  : mode === 'module'
+                  ? 'Ex: "Teste o PDV completo" ou "Verifique o checkout" — foca no módulo'
+                  : 'Ex: "Teste o fluxo de pagamento no PDV" — apenas os passos funcionais'}
                 rows={3} style={{
                   width: '100%', boxSizing: 'border-box', padding: '10px 12px',
                   background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(124,58,237,0.22)',
                   borderRadius: 8, color: '#e2e8f0', fontSize: 13, outline: 'none',
-                  resize: 'vertical', fontFamily: 'inherit', opacity: stage === 'detecting' ? 0.6 : 1,
+                  resize: 'vertical', fontFamily: 'inherit', opacity: stage === 'planning' ? 0.6 : 1,
                 }}
               />
             </div>
-            <button onClick={handleDetect} disabled={stage === 'detecting' || !goal.trim() || !baseUrl.trim()} style={{
+
+            <button onClick={handlePlan} disabled={stage === 'planning' || !goal.trim() || !baseUrl.trim()} style={{
               padding: '12px', borderRadius: 8, fontWeight: 700, fontSize: 14,
-              cursor: stage === 'detecting' ? 'wait' : 'pointer', border: 'none',
-              background: stage === 'detecting' ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7c3aed,#4f46e5)',
-              color: stage === 'detecting' ? '#a78bfa' : '#fff',
+              cursor: stage === 'planning' ? 'wait' : 'pointer', border: 'none',
+              background: stage === 'planning' ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+              color: stage === 'planning' ? '#a78bfa' : '#fff',
             }}>
-              {stage === 'detecting' ? '🔎 Analisando objetivo...' : '🔎 Analisar e Planejar'}
+              {stage === 'planning' ? '🧠 Gerando plano...' : '🧠 Gerar Plano de Execução'}
             </button>
           </div>
         </Card>
       )}
 
-      {/* ── CLARIFICATION (goal too broad) ───────────────────────────────── */}
+      {/* ── CLARIFY ──────────────────────────────────────────────────────── */}
       {stage === 'clarify' && (
         <Card style={{ marginBottom: 16 }}>
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>
-              O objetivo é muito amplo
+              Qual módulo deseja testar?
             </div>
             <div style={{ fontSize: 13, color: '#64748b' }}>
-              O que você deseja testar? Selecione um foco:
+              O objetivo estava amplo demais. Selecione o foco da auditoria:
             </div>
           </div>
           <IntentPicker allIntents={allIntents} selected={selectedIntent} onSelect={setSelectedIntent} />
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={() => { setStage('form') }} style={{ padding: '10px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 13 }}>
+            <button onClick={() => setStage('form')} style={{ padding: '10px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 13 }}>
               ← Voltar
             </button>
-            <button onClick={() => setStage('confirm')} disabled={!selectedIntent} style={{
-              flex: 1, padding: '10px', borderRadius: 8, fontWeight: 700, fontSize: 13,
-              cursor: selectedIntent ? 'pointer' : 'not-allowed', border: 'none',
+            <button onClick={handleConfirmClarify} disabled={!selectedIntent} style={{
+              flex: 1, padding: '10px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none',
+              cursor: selectedIntent ? 'pointer' : 'not-allowed',
               background: selectedIntent ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(124,58,237,0.2)',
               color: selectedIntent ? '#fff' : '#a78bfa',
             }}>
-              {selectedIntent ? `Continuar com ${selectedIntent.emoji} ${selectedIntent.name} →` : 'Selecione uma opção'}
+              {selectedIntent ? `Ver plano para ${selectedIntent.emoji} ${selectedIntent.name} →` : 'Selecione um módulo'}
             </button>
           </div>
         </Card>
       )}
 
-      {/* ── CONFIRM INTENT ───────────────────────────────────────────────── */}
-      {stage === 'confirm' && selectedIntent && (
+      {/* ── REVIEW CONTRACT ──────────────────────────────────────────────── */}
+      {stage === 'review' && contract && (
         <Card style={{ marginBottom: 16 }}>
-          {/* Intent detected badge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '10px 14px', borderRadius: 10, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)' }}>
-            <span style={{ fontSize: 28 }}>{selectedIntent.emoji}</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 2 }}>
-                {detectedIntent?.id === selectedIntent.id ? 'INTENÇÃO DETECTADA' : 'INTENÇÃO SELECIONADA'}
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#e2e8f0' }}>{selectedIntent.name}</div>
-            </div>
-            <button onClick={() => setStage('clarify')} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
-              Mudar
-            </button>
-          </div>
+          <ContractPreview contract={contract} />
 
-          {/* Summary of what will run */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap', fontSize: 12 }}>
-            <div style={{ color: '#64748b' }}>🔗 {baseUrl}</div>
-            {username && <div style={{ color: '#64748b' }}>👤 {username}</div>}
-          </div>
-
-          {/* Steps preview */}
-          <IntentSteps intent={selectedIntent} customSteps={customSteps} />
-
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button onClick={() => setStage('form')} style={{ padding: '10px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 13 }}>
               ← Editar
+            </button>
+            <button onClick={() => { setStage('clarify') }} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 13 }}>
+              Mudar módulo
             </button>
             <button onClick={handleStart} style={{
               flex: 1, padding: '12px', borderRadius: 8, fontWeight: 700, fontSize: 14,
@@ -372,7 +469,7 @@ export default function AgentDashboard() {
         </Card>
       )}
 
-      {/* ── TERMINAL (always visible during/after run) ────────────────────── */}
+      {/* ── TERMINAL ─────────────────────────────────────────────────────── */}
       {(stage === 'running' || stage === 'done' || logs.length > 0) && (
         <Card style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -380,20 +477,18 @@ export default function AgentDashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {isRunning && (
                 <>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#7c3aed' }} />
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1.5s infinite' }} />
                   <span style={{ fontSize: 11, color: '#7c3aed' }}>Executando...</span>
                 </>
               )}
-              {stage === 'done' && (
-                <span style={{ fontSize: 11, color: '#22c55e' }}>✅ Concluído</span>
-              )}
+              {stage === 'done' && <span style={{ fontSize: 11, color: '#22c55e' }}>✅ Concluído</span>}
             </div>
           </div>
           <LiveTerminal logs={logs} />
         </Card>
       )}
 
-      {/* ── DONE: call to action ──────────────────────────────────────────── */}
+      {/* ── DONE ─────────────────────────────────────────────────────────── */}
       {stage === 'done' && (
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={handleReset} style={{
@@ -413,10 +508,12 @@ export default function AgentDashboard() {
         </div>
       )}
 
-      {/* ── Tip (always) ─────────────────────────────────────────────────── */}
+      {/* ── Tip ──────────────────────────────────────────────────────────── */}
       {stage === 'form' && (
         <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.12)', fontSize: 12, color: '#64748b' }}>
-          💡 Exemplos: <em style={{ color: '#7c3aed' }}>"Teste o PDV inteiro"</em> · <em style={{ color: '#7c3aed' }}>"Verifique se o login funciona"</em> · <em style={{ color: '#7c3aed' }}>"Audite o checkout"</em>
+          💡 Dica: Use <em style={{ color: '#7c3aed' }}>Por Fluxo</em> para testes rápidos sem ruído de SEO/links.
+          Use <em style={{ color: '#7c3aed' }}>Por Módulo</em> para relatórios de qualidade de um módulo específico.
+          Use <em style={{ color: '#7c3aed' }}>Global</em> para auditorias de release completas.
         </div>
       )}
     </div>

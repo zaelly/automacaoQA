@@ -20,8 +20,9 @@ import { TestRunner } from '../agent/TestRunner';
 import { GroqClient } from '../llm/GroqClient';
 import { IntentDetector } from '../llm/IntentDetector';
 import { INTENTS } from '../agent/intents';
+import { buildContract, ALL_INTENT_SUMMARIES } from '../agent/contracts';
 import { QaSessionStorage } from '../storage/QaSessionStorage';
-import type { BroadcastEvent, QaSession } from '../agent/types';
+import type { BroadcastEvent, QaSession, AuditMode, ExecutionContract } from '../agent/types';
 
 const WORKSPACE = path.join(__dirname, '..', 'agent-workspace');
 const storage   = new QaSessionStorage(WORKSPACE);
@@ -56,13 +57,69 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
     }
   });
 
+  // ── POST /plan ──────────────────────────────────────────────────────────────
+  // Generates an ExecutionContract without starting the session.
+  // The UI shows this to the user before they confirm.
+  router.post('/plan', async (req: Request, res: Response) => {
+    const { goal, mode = 'module', forceIntent } = req.body as {
+      goal?: string;
+      mode?: AuditMode;
+      forceIntent?: string;
+    };
+    if (!goal) return res.status(400).json({ error: 'goal é obrigatório' });
+
+    // Global mode: no AI needed, test everything
+    if (mode === 'global') {
+      const contract = buildContract('global', forceIntent || 'exploratorio');
+      return res.json({ ...contract, allIntents: ALL_INTENT_SUMMARIES });
+    }
+
+    // If user manually picked an intent, skip AI classification
+    if (forceIntent) {
+      const apiKey = process.env.GROQ_API_KEY;
+      let customSteps: string[] = [];
+      if (apiKey) {
+        try {
+          const det = new IntentDetector(apiKey);
+          const r = await det.detect(goal);
+          customSteps = r.customSteps || [];
+        } catch { /* ignore */ }
+      }
+      const contract = buildContract(mode, forceIntent, customSteps);
+      return res.json({ ...contract, allIntents: ALL_INTENT_SUMMARIES });
+    }
+
+    // AI-driven intent detection
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      const contract = buildContract(mode, 'exploratorio');
+      return res.json({ ...contract, allIntents: ALL_INTENT_SUMMARIES });
+    }
+
+    try {
+      const detector = new IntentDetector(apiKey);
+      const result   = await detector.detect(goal);
+
+      if (result.needsClarification || result.intent === 'unknown') {
+        return res.json({ needsClarification: true, allIntents: ALL_INTENT_SUMMARIES });
+      }
+
+      const contract = buildContract(mode, result.intent as string, result.customSteps);
+      return res.json({ ...contract, allIntents: ALL_INTENT_SUMMARIES });
+    } catch {
+      const contract = buildContract(mode, 'exploratorio');
+      return res.json({ ...contract, allIntents: ALL_INTENT_SUMMARIES });
+    }
+  });
+
   // ── POST /sessions ──────────────────────────────────────────────────────────
   router.post('/sessions', async (req: Request, res: Response) => {
-    const { goal, baseUrl, credentials, intent, customSteps } = req.body as {
+    const { goal, baseUrl, credentials, intent, mode = 'module', customSteps } = req.body as {
       goal: string;
       baseUrl: string;
       credentials?: { username?: string; password?: string };
       intent?: string;
+      mode?: AuditMode;
       customSteps?: string[];
     };
 
@@ -78,22 +135,25 @@ export function createAgentRouter(broadcast: (event: BroadcastEvent) => void): R
     const sessionId = uuidv4();
 
     const intentDef = intent ? INTENTS[intent as keyof typeof INTENTS] : undefined;
+    const contract  = buildContract(mode, intent || 'exploratorio', customSteps);
+
     const session: QaSession = {
       id: sessionId,
       goal,
       baseUrl,
       status: 'running',
-      intent:      intentDef?.id,
-      intentName:  intentDef?.name,
+      contract,
+      intent:      contract.intent,
+      intentName:  contract.intentName,
       customSteps: customSteps?.length ? customSteps : undefined,
       startedAt: new Date().toISOString(),
     };
 
     activeSessions.set(sessionId, session);
-    broadcast({ type: 'session_started', sessionId, payload: { goal, baseUrl } });
+    broadcast({ type: 'session_started', sessionId, payload: { goal, baseUrl, mode, intent: contract.intent } });
 
     // Run in background
-    runSession(session, apiKey, broadcast, credentials, intent, customSteps).catch(err => {
+    runSession(session, apiKey, broadcast, credentials, intent, customSteps, contract).catch(err => {
       console.error(`[AgentRoute] Session ${sessionId} fatal:`, err.message);
     });
 
@@ -155,13 +215,14 @@ async function runSession(
   credentials?: { username?: string; password?: string },
   intent?: string,
   customSteps?: string[],
+  contract?: ExecutionContract,
 ): Promise<void> {
   const { id: sessionId, goal, baseUrl } = session;
 
   try {
     // ── Phase 1: Playwright audit ─────────────────────────────────────────────
     const runner = new TestRunner(sessionId, WORKSPACE, broadcast);
-    const summary = await runner.run(goal, baseUrl, credentials, intent, customSteps);
+    const summary = await runner.run(goal, baseUrl, credentials, intent, customSteps, contract);
 
     session.testSummary = summary;
 
